@@ -3,9 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ['jspdf', 'jspdf-autotable'],
+  },
   build: {
-    rollupOptions: {
-      external: ['jspdf', 'jspdf-autotable'],
+    commonjsOptions: {
+      include: [/jspdf/, /node_modules/],
     },
   },
 });
