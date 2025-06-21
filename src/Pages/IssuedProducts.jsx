@@ -8,6 +8,7 @@ const IssuedProductTable = () => {
     const [issuedProducts, setIssuedProducts] = useState([]);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchIssuedProducts();
@@ -17,12 +18,7 @@ const IssuedProductTable = () => {
         try {
             const response = await axios.get(
                 `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`,
-                {
-                    params: {
-                        startDate,
-                        endDate,
-                    },
-                }
+                { params: { startDate, endDate } }
             );
             setIssuedProducts(response.data);
         } catch (error) {
@@ -30,12 +26,26 @@ const IssuedProductTable = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        const confirm = window.confirm("Are you sure you want to delete this record?");
+        if (!confirm) return;
+
+        try {
+            await axios.delete(
+                `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products/${id}`
+            );
+            fetchIssuedProducts();
+        } catch (error) {
+            console.error("Error deleting issued product:", error);
+            alert("Failed to delete issued product.");
+        }
+    };
+
     const exportIssuedPDF = () => {
         const doc = new jsPDF();
-
         autoTable(doc, {
             head: [["Product Name", "Quantity", "Unit", "Issued To", "Issued At"]],
-            body: issuedProducts.map((prod) => [
+            body: filteredProducts.map((prod) => [
                 prod.name,
                 prod.quantity,
                 prod.unit,
@@ -44,14 +54,11 @@ const IssuedProductTable = () => {
             ]),
             startY: 20,
         });
-
         doc.save("issued-products.pdf");
     };
 
-
-
     const exportIssuedExcel = () => {
-        const data = issuedProducts.map((item) => ({
+        const data = filteredProducts.map((item) => ({
             Name: item.name,
             Quantity: item.quantity,
             Unit: item.unit,
@@ -64,92 +71,122 @@ const IssuedProductTable = () => {
         XLSX.writeFile(workbook, "issued-products.xlsx");
     };
 
+    const filteredProducts = issuedProducts.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.issuedTo.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Issued Products</h1>
-
-            {/* Date Filters */}
-            <div className="flex items-center space-x-4 mb-4">
-                <div>
-                    <label className="block text-sm font-medium mb-1">Start Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border px-3 py-2 rounded"
-                    />
+        <div className="min-h-screen bg-gray-100 p-6">
+            <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-indigo-700">Issued Products</h1>
+                    <p className="text-sm text-gray-500">Track, filter, search and manage issued inventory.</p>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium mb-1">End Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border px-3 py-2 rounded"
-                    />
+
+                {/* Filters and Export Controls */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700">Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700">End Date</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700">Search</label>
+                        <input
+                            type="text"
+                            placeholder="Search by name or issued to..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                        />
+                    </div>
                 </div>
-                <button
-                    onClick={() => {
-                        setStartDate("");
-                        setEndDate("");
-                    }}
-                    className="mt-5 bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded"
-                >
-                    Clear Filters
-                </button>
-            </div>
 
-            {/* Export Buttons */}
-            <div className="flex space-x-4 mb-4">
-                <button
-                    onClick={exportIssuedPDF}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                >
-                    Export PDF
-                </button>
-                <button
-                    onClick={exportIssuedExcel}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-                >
-                    Export Excel
-                </button>
-            </div>
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex gap-3">
+                        <button
+                            onClick={exportIssuedPDF}
+                            className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm shadow"
+                        >
+                            Export PDF
+                        </button>
+                        <button
+                            onClick={exportIssuedExcel}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm shadow"
+                        >
+                            Export Excel
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setStartDate("");
+                            setEndDate("");
+                            setSearchQuery("");
+                        }}
+                        className="text-sm px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="text-left py-3 px-4 font-semibold text-sm">Name</th>
-                            <th className="text-left py-3 px-4 font-semibold text-sm">Quantity</th>
-                            <th className="text-left py-3 px-4 font-semibold text-sm">Unit</th>
-                            <th className="text-left py-3 px-4 font-semibold text-sm">Issued To</th>
-                            <th className="text-left py-3 px-4 font-semibold text-sm">Issued At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {issuedProducts.length === 0 ? (
+                {/* Table */}
+                <div className="overflow-x-auto rounded-lg shadow">
+                    <table className="min-w-full bg-white">
+                        <thead className="bg-indigo-600 text-white">
                             <tr>
-                                <td colSpan="5" className="py-4 px-4 text-center text-gray-500">
-                                    No issued products found for the selected date range.
-                                </td>
+                                <th className="text-left py-3 px-4">Name</th>
+                                <th className="text-left py-3 px-4">Quantity</th>
+                                <th className="text-left py-3 px-4">Unit</th>
+                                <th className="text-left py-3 px-4">Issued To</th>
+                                <th className="text-left py-3 px-4">Issued At</th>
+                                <th className="text-left py-3 px-4">Action</th>
                             </tr>
-                        ) : (
-                            issuedProducts.map((item) => (
-                                <tr key={item._id} className="border-t hover:bg-gray-50">
-                                    <td className="py-3 px-4">{item.name}</td>
-                                    <td className="py-3 px-4">{item.quantity}</td>
-                                    <td className="py-3 px-4">{item.unit}</td>
-                                    <td className="py-3 px-4">{item.issuedTo}</td>
-                                    <td className="py-3 px-4">
-                                        {new Date(item.issuedAt).toLocaleString()}
+                        </thead>
+                        <tbody>
+                            {filteredProducts.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-6 text-gray-500">
+                                        No records found.
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-
-                </table>
+                            ) : (
+                                filteredProducts.map((item) => (
+                                    <tr key={item._id} className="hover:bg-gray-50 border-b">
+                                        <td className="py-3 px-4">{item.name}</td>
+                                        <td className="py-3 px-4">{item.quantity}</td>
+                                        <td className="py-3 px-4">{item.unit}</td>
+                                        <td className="py-3 px-4">{item.issuedTo}</td>
+                                        <td className="py-3 px-4">
+                                            {new Date(item.issuedAt).toLocaleString()}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={() => handleDelete(item._id)}
+                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
