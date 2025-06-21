@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { useNotification } from "../Components/NotificationProvider";
 
 const Sold = () => {
@@ -74,6 +77,27 @@ const Sold = () => {
         addNotification({ type: 'success', message: 'Product Issued Successfully!' });
     };
 
+    const exportPDF = () => {
+        const doc = new jsPDF();
+        doc.autoTable({
+            head: [["Name", "Quantity", "Unit"]],
+            body: filteredProducts.map((product) => [
+                product.name,
+                product.quantity,
+                product.unit,
+            ]),
+        });
+        doc.save("products.pdf");
+    };
+
+    const exportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(filteredProducts);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+        XLSX.writeFile(workbook, "products.xlsx");
+    };
+
+
     return (
         <div className="min-h-screen bg-gray-100 py-10 px-4">
             <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
@@ -88,6 +112,22 @@ const Sold = () => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+                </div>
+
+                
+<div className="flex gap-4 items-center">
+                    <button
+                        onClick={exportPDF}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition"
+                    >
+                        Export PDF
+                    </button>
+                    <button
+                        onClick={exportExcel}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition"
+                    >
+                        Export Excel
+                    </button>
                 </div>
 
                 {/* Edit Form */}
