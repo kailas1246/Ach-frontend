@@ -77,7 +77,7 @@ const Sold = () => {
     return (
         <div className="min-h-screen bg-gray-100 py-10 px-4">
             <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6">Sold Products</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">Store Issue</h1>
 
                 {/* Search Bar */}
                 <div className="mb-6">
