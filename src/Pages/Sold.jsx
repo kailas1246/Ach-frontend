@@ -6,206 +6,285 @@ import * as XLSX from "xlsx";
 import { useNotification } from "../Components/NotificationProvider";
 
 const Sold = () => {
-  const { addNotification } = useNotification();
-  const [products, setProducts] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", quantity: "", unit: "kg", remarks: "", status: "not sold" });
-  const [search, setSearch] = useState("");
-  const [deleteId, setDeleteId] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
 
-  const [issueProduct, setIssueProduct] = useState(null);
-  const [issueQty, setIssueQty] = useState("");
+const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [issueProduct, setIssueProduct] = useState(null);
+    const [issuedTo, setIssuedTo] = useState("");
+    const [issueQuantity, setIssueQuantity] = useState("");
+    const [showIssuePopup, setShowIssuePopup] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+    const tableRef = useRef();
 
-  const fetchProducts = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`);
-    setProducts(res.data.filter(p => p.status === "sold"));
-  };
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+    useEffect(() => {
+        const filtered = products.filter((product) =>
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+    }, [searchQuery, products]);
 
-  const confirmDelete = (id) => {
-    setDeleteId(id);
-    setShowDeleteModal(true);
-  };
-
-  const handleDelete = async () => {
-    await axios.delete(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${deleteId}`);
-    setShowDeleteModal(false);
-    setDeleteId(null);
-    fetchProducts();
-    addNotification({ type: 'success', message: 'Product Deleted Successfully!' });
-  };
-
-  const handleEdit = (p) => {
-    setEditing(p._id);
-    setForm(p);
-  };
-
-  const handleUpdate = async () => {
-    await axios.put(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${editing}`, form);
-    setEditing(null);
-    setForm({ name: "", quantity: "", unit: "kg", remarks: "", status: "not sold" });
-    fetchProducts();
-    addNotification({ type: 'success', message: 'Product Edited Successfully!' });
-  };
-
-  const handleIssueSubmit = async () => {
-    const qty = parseFloat(issueQty);
-    if (isNaN(qty) || qty <= 0) {
-      return addNotification({ type: 'error', message: 'Enter a valid quantity.' });
-    }
-    if (qty > parseFloat(issueProduct.quantity)) {
-      return addNotification({ type: 'error', message: 'Issued quantity exceeds available quantity.' });
-    }
-
-    const updatedProduct = {
-      ...issueProduct,
-      quantity: parseFloat(issueProduct.quantity) - qty,
+    const fetchProducts = async () => {
+        const response = await axios.get(
+            `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`
+        );
+        setProducts(response.data);
     };
 
-    await axios.put(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`, updatedProduct);
-    setIssueProduct(null);
-    setIssueQty("");
-    fetchProducts();
-    addNotification({ type: 'success', message: 'Product Issued Successfully!' });
-  };
+    const openIssuePopup = (product) => {
+        setIssueProduct(product);
+        setIssuedTo("");
+        setIssueQuantity("");
+        setIsEditMode(false);
+        setShowIssuePopup(true);
+    };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.autoTable({
-      head: [["Name", "Quantity", "Unit"]],
-      body: filteredProducts.map(p => [p.name, p.quantity, p.unit]),
-    });
-    doc.save("products.pdf");
-  };
+    const openEditPopup = (product) => {
+        setIssueProduct(product);
+        setIssuedTo(product.name);
+        setIssueQuantity(product.quantity);
+        setIsEditMode(true);
+        setShowIssuePopup(true);
+    };
 
-  const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredProducts);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-    XLSX.writeFile(wb, "products.xlsx");
-  };
+    const closeIssuePopup = () => {
+        setShowIssuePopup(false);
+        setIssueProduct(null);
+        setIssuedTo("");
+        setIssueQuantity("");
+        setIsEditMode(false);
+    };
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Store Issue</h1>
+    const handleDelete = async (productId) => {
+        if (confirm("Are you sure you want to delete this product?")) {
+            try {
+                await axios.delete(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${productId}`);
+                fetchProducts();
+            } catch (error) {
+                console.error("Error deleting product:", error);
+            }
+        }
+    };
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-          <input
-            type="search"
-            className="w-full md:w-1/3 px-4 py-2 border rounded focus:ring focus:border-blue-500"
-            placeholder="Search by product name..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <div className="flex gap-4">
-            <button onClick={exportPDF} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Export PDF</button>
-            <button onClick={exportExcel} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Export Excel</button>
-          </div>
-        </div>
+    const handleIssueSubmit = async (e) => {
+        e.preventDefault();
+        const qty = parseInt(issueQuantity);
+        if (!issuedTo || isNaN(qty) || qty < 0) {
+            alert("Please fill all fields correctly.");
+            return;
+        }
 
-        {editing && (
-          <div className="bg-gray-100 border p-4 rounded mb-6">
-            <h2 className="font-semibold text-blue-700 mb-4">Edit Product</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Name" className="p-2 border rounded" />
-              <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="Quantity" className="p-2 border rounded" />
-              <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} className="p-2 border rounded">
-                {["kg", "litre", "piece", "box", "Ton"].map(u => <option value={u} key={u}>{u}</option>)}
-              </select>
-              <input value={form.remarks} onChange={e => setForm({ ...form, remarks: e.target.value })} placeholder="Remarks" className="p-2 border rounded" />
+        try {
+            if (isEditMode) {
+                await axios.put(
+                    `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`,
+                    {
+                        ...issueProduct,
+                        name: issuedTo,
+                        quantity: qty,
+                    }
+                );
+            } else {
+                if (qty > issueProduct.quantity) {
+                    alert("Issued quantity exceeds available stock");
+                    return;
+                }
+
+                await axios.put(
+                    `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`,
+                    {
+                        ...issueProduct,
+                        quantity: issueProduct.quantity - qty,
+                    }
+                );
+
+                await axios.post(
+                    `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`,
+                    {
+                        productId: issueProduct._id,
+                        name: issueProduct.name,
+                        quantity: qty,
+                        unit: issueProduct.unit,
+                        issuedTo,
+                    }
+                );
+            }
+
+            fetchProducts();
+            closeIssuePopup();
+        } catch (error) {
+            console.error("Error submitting form:", error);
+        }
+    };
+
+    const exportPDF = () => {
+        const doc = new jsPDF();
+        doc.autoTable({
+            head: [["Name", "Quantity", "Unit"]],
+            body: filteredProducts.map((product) => [
+                product.name,
+                product.quantity,
+                product.unit,
+            ]),
+        });
+        doc.save("products.pdf");
+    };
+
+    const exportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(filteredProducts);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+        XLSX.writeFile(workbook, "products.xlsx");
+    };
+
+
+
+
+
+<div className="p-6 max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h1 className="text-3xl font-bold text-gray-800">Store</h1>
+
+                <div className="flex gap-4 items-center">
+                    <button
+                        onClick={exportPDF}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition"
+                    >
+                        Export PDF
+                    </button>
+                    <button
+                        onClick={exportExcel}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition"
+                    >
+                        Export Excel
+                    </button>
+                </div>
             </div>
-            <div className="flex items-center gap-2 mt-4">
-              <input type="checkbox" checked={form.status === "sold"} onChange={e => setForm({ ...form, status: e.target.checked ? "sold" : "not sold" })} />
-              <label className="text-sm text-gray-600">Mark as Sold</label>
-            </div>
-            <button onClick={handleUpdate} className="mt-4 bg-blue-600 text-white p-2 rounded">Save Changes</button>
-          </div>
-        )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                {["Name", "Quantity", "Unit", "Remarks", "Status", "Actions"].map(h => (
-                  <th className="px-4 py-3" key={h}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((p, i) => (
-                <tr key={p._id} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="px-4 py-2">{p.name}</td>
-                  <td className="px-4 py-2">{p.quantity}</td>
-                  <td className="px-4 py-2">{p.unit}</td>
-                  <td className="px-4 py-2">{p.remarks}</td>
-                  <td className="px-4 py-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded ${p.status === "sold" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                      <span className={`w-2 h-2 rounded-full ${p.status === "sold" ? "bg-green-500" : "bg-red-500"}`} />
-                      {p.status === "sold" ? "Sold" : "Not Sold"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-center space-x-2">
-                    <button onClick={() => handleEdit(p)} className="bg-blue-600 text-white px-3 py-1 rounded">Edit</button>
-                    <button onClick={() => confirmDelete(p._id)} className="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
-                    <button onClick={() => { setIssueProduct(p); setIssueQty(""); }} className="bg-yellow-600 text-white px-3 py-1 rounded">Issue</button>
-                  </td>
-                </tr>
-              ))}
-              {filteredProducts.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="text-center py-6 text-gray-500">No products found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Delete Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-2">Confirm Deletion</h2>
-            <p className="text-gray-600 mb-4">Are you sure?</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
+            <div className="mb-4">
+                <div className="relative w-full max-w-sm">
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+                </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Issue Modal */}
-      {issueProduct && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-2">Issue Product</h2>
-            <p className="text-sm text-gray-600 mb-4">Available: {issueProduct.quantity} {issueProduct.unit}</p>
-            <input
-              type="number"
-              placeholder="Quantity to issue"
-              value={issueQty}
-              onChange={e => setIssueQty(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-            />
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setIssueProduct(null)} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-              <button onClick={handleIssueSubmit} className="px-4 py-2 bg-yellow-600 text-white rounded">Issue</button>
+            <div className="overflow-x-auto rounded-lg shadow-md">
+                <table className="w-full table-auto bg-white">
+                    <thead className="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th className="text-left px-6 py-3 font-semibold">Product Name</th>
+                            <th className="text-left px-6 py-3 font-semibold">Quantity</th>
+                            <th className="text-left px-6 py-3 font-semibold">Unit</th>
+                            <th className="text-left px-6 py-3 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredProducts.map((product) => (
+                            <tr key={product._id} className="hover:bg-gray-50 transition">
+                                <td className="px-6 py-4">{product.name}</td>
+                                <td className="px-6 py-4">{product.quantity}</td>
+                                <td className="px-6 py-4">{product.unit}</td>
+                                <td className="px-6 py-4 space-x-2">
+                                    <button
+                                        onClick={() => openIssuePopup(product)}
+                                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition"
+                                    >
+                                        Issue
+                                    </button>
+                                    <button
+                                        onClick={() => openEditPopup(product)}
+                                        className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm transition"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(product._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition"
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {filteredProducts.length === 0 && (
+                            <tr>
+                                <td colSpan="4" className="text-center py-6 text-gray-500">
+                                    No products found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
-          </div>
+
+            {/* Popup Modal */}
+            {showIssuePopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg animate-fadeIn">
+                        <h2 className="text-xl font-bold mb-4 text-gray-800">
+                            {isEditMode ? "Edit Product" : "Issue Product"}
+                        </h2>
+                        <form onSubmit={handleIssueSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {isEditMode ? "Product Name" : "Issued To"}
+                                </label>
+                                <input
+                                    type="text"
+                                    className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    value={issuedTo}
+                                    onChange={(e) => setIssuedTo(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Quantity
+                                </label>
+                                <input
+                                    type="number"
+                                    className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    value={issueQuantity}
+                                    onChange={(e) => setIssueQuantity(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={closeIssuePopup}
+                                    className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-gray-800"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                    {isEditMode ? "Update" : "Issue"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
+
+
+
 
 export default Sold;
