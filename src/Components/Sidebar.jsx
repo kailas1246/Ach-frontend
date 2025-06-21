@@ -11,7 +11,8 @@ const Sidebar = () => {
         { path: "/orders", label: "All Orders" },
         { path: "/unsold", label: "Unsold" },
         { path: "/sold", label: "Sold" },
-        { path: "issued-products", label: "Issued Products" }
+        { path: "/issued-products", label: "Issued Products" },
+        { path: "/", label: "Logout" }
     ];
 
     return (
