@@ -16,6 +16,7 @@ const Unsold = () => {
     const [selectedProviders, setSelectedProviders] = useState([]);
     const [allProviders, setAllProviders] = useState([]);
     const [showProviderDropdown, setShowProviderDropdown] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     const handleProviderChange = (provider) => {
         if (provider === 'ALL') {
@@ -278,6 +279,22 @@ const Unsold = () => {
                         </tr>
                     </thead>
                     <tbody>
+                        {selectedProduct && (
+                            <div
+                                className="fixed left-[70%] top-[100px] transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
+                            >
+                                <div className="flex justify-between items-center">
+
+
+                                </div>
+                                <hr />
+                                <div className="font-semibold space-y-2">
+                                    <p><strong> {selectedProduct.quantity} {selectedProduct.unit}</strong></p>
+
+                                </div>
+                            </div>
+                        )}
+
                         {filteredProducts.length === 0 ? (
                             <tr>
                                 <td colSpan="7" className="text-center py-6 text-gray-500">
@@ -287,9 +304,16 @@ const Unsold = () => {
                         ) : (
                             filteredProducts.map((product, index) => (
                                 <tr key={index} className="border-b hover:bg-gray-50">
-                                    <td className="py-3 px-4">{product.name}</td>
+                                    <td
+                                        className="py-3 px-4 text-indigo-700 font-medium cursor-pointer hover:underline"
+                                        onClick={() => setSelectedProduct(product)}
+                                    >
+                                        {product.name}
+                                    </td>
+
+
                                     <td className="py-3 px-4">{product.quantity}</td>
-                                    <td className="py-3 px-4 capitalize">{product.unit}</td>
+                                    <td className="py-3 px-4">{product.unit}</td>
                                     <td className="py-3 px-4">{product.provider}</td>
                                     <td className="py-3 px-4">{product.remarks || '-'}</td>
                                     <td className="py-3 px-4">
