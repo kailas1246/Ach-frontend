@@ -95,6 +95,8 @@ const AddProduct = () => {
                     <option value="piece">Piece</option>
                     <option value="box">Box</option>
                     <option value="ton">Ton</option>
+                    <option value="ton">Nos</option>
+                    <option value="ton">Set</option>
                 </select>
 
                 <input
