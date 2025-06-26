@@ -45,7 +45,7 @@ const ProductTable = () => {
         setIssueProduct(product);
         setIssuedTo("");
         setIssueQuantity("");
-        setIssueKg("")
+        setIssueKg("kg")
         setIsEditMode(false);
         setShowIssuePopup(true);
     };
@@ -386,7 +386,7 @@ const ProductTable = () => {
                                 />
                             </div>
 
-{/*                             <div>
+                           <div>
                                 <label className="block text-sm font-medium text-gray-700">Unit</label>
                                 <select
                                     value={issueKg}
@@ -395,11 +395,10 @@ const ProductTable = () => {
                                     required
                                 >
                                     <option value="">Select Unit</option>
-                                    <option value="KG">KG</option>
-                                    <option value="Litre">Litre</option>
-                                    <option value="Piece">Piece</option>
+                                    <option value="Default">Default</option>
+                                    
                                 </select>
-                            </div> */}
+                            </div>
 
                             <div className="flex justify-end gap-2 pt-4">
                                 <button
