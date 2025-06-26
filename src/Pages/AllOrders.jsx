@@ -386,7 +386,7 @@ const ProductTable = () => {
                                 />
                             </div>
 
-                            <div>
+{/*                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Unit</label>
                                 <select
                                     value={issueKg}
@@ -399,7 +399,7 @@ const ProductTable = () => {
                                     <option value="Litre">Litre</option>
                                     <option value="Piece">Piece</option>
                                 </select>
-                            </div>
+                            </div> */}
 
                             <div className="flex justify-end gap-2 pt-4">
                                 <button
