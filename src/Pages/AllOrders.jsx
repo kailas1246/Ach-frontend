@@ -10,7 +10,7 @@ const ProductTable = () => {
     const [issuedTo, setIssuedTo] = useState("");
     const [issueQuantity, setIssueQuantity] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [issueKg, setIssueKg] = useState("KG")
+    const [issueKg, setIssueKg] = useState("kg")
     const [showIssuePopup, setShowIssuePopup] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedProviders, setSelectedProviders] = useState([]);
