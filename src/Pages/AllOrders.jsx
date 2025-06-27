@@ -282,7 +282,7 @@ const ProductTable = () => {
                     <tbody>
                         {selectedProduct && (
                             <div
-                                className="fixed left-[95%] top-[100px] transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
+                               className="fixed left-[80%] top-[100px] w-1/5 text-center transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
                             >
                                 <div className="flex justify-between items-center">
 
@@ -395,7 +395,11 @@ const ProductTable = () => {
                                     required
                                 >
                                     <option value="">Select Unit</option>
-                                    <option value="Default">Default</option>
+                                    <option value="Kg">Kg</option>
+                                    <option value="Litre">Litre</option>
+                                    <option value="Piece">Piece</option>
+                                    <option value="Nos">Nos</option>
+                                    <option value="Set">Set</option>
                                     
                                 </select>
                             </div>
