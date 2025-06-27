@@ -10,7 +10,7 @@ const Sidebar = () => {
         { path: "/add-product", label: "Add Product" },
         { path: "/orders", label: "All Orders" },
         { path: "/unsold", label: "Current Stock" },
-        { path: "/sold", label: "Store Issue" },
+        // { path: "/sold", label: "Store Issue" },
         { path: "issued-products", label: "Issued Products" }
     ];
 
