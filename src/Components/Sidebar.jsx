@@ -8,10 +8,10 @@ const Sidebar = () => {
 
     const links = [
         { path: "/add-product", label: "Add Product" },
-        { path: "/orders", label: "All Orders" },
-        { path: "/unsold", label: "Current Stock" },
+        { path: "/orders", label: "Current Stock" },
+        // { path: "/unsold", label: "Current Stock" },
         // { path: "/sold", label: "Store Issue" },
-        // { path: "issued-products", label: "Issued Products" }
+        { path: "issued-products", label: "Issued Products" }
     ];
 
     return (
