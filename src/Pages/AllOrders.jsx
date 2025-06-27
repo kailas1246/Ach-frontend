@@ -282,7 +282,7 @@ const ProductTable = () => {
                     <tbody>
                         {selectedProduct && (
                             <div
-                                className="fixed left-[80%] top-[100px] transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
+                                className="fixed left-[95%] top-[100px] transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
                             >
                                 <div className="flex justify-between items-center">
 
