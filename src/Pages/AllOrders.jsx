@@ -3,6 +3,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Papa from 'papaparse';
+import * as XLSX from "xlsx";
 
 const ProductTable = () => {
     const [products, setProducts] = useState([]);
@@ -10,13 +11,28 @@ const ProductTable = () => {
     const [issuedTo, setIssuedTo] = useState("");
     const [issueQuantity, setIssueQuantity] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [issueKg, setIssueKg] = useState("kg")
+    const [issueKg, setIssueKg] = useState("KG")
     const [showIssuePopup, setShowIssuePopup] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedProviders, setSelectedProviders] = useState([]);
     const [allProviders, setAllProviders] = useState([]);
     const [showProviderDropdown, setShowProviderDropdown] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const fetchUnsoldProducts = async () => {
+        try {
+            const response = await axios.get(
+                `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`
+            );
+            setProducts(response.data);
+
+            const uniqueProviders = [...new Set(response.data.map(p => p.name))];
+            setAllProviders(uniqueProviders);
+        } catch (error) {
+            console.error('Error fetching unsold products:', error);
+        }
+    };
+
+
 
     const handleProviderChange = (provider) => {
         if (provider === 'ALL') {
@@ -36,6 +52,33 @@ const ProductTable = () => {
 
 
 
+    const handleExcelImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = async (event) => {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+            try {
+                await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/import`, jsonData);
+                alert("Products imported successfully.");
+                fetchUnsoldProducts();
+            } catch (err) {
+                alert("Failed to import products");
+                console.error(err);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    };
+
+
     useEffect(() => {
         fetchUnsoldProducts();
     }, []);
@@ -45,7 +88,7 @@ const ProductTable = () => {
         setIssueProduct(product);
         setIssuedTo("");
         setIssueQuantity("");
-        setIssueKg("kg")
+        setIssueKg("")
         setIsEditMode(false);
         setShowIssuePopup(true);
     };
@@ -59,24 +102,15 @@ const ProductTable = () => {
         setShowIssuePopup(true);
     };
 
-    const fetchUnsoldProducts = async () => {
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`
-            );
-            setProducts(response.data);
-
-            const uniqueProviders = [...new Set(unsold.map(p => p.provider))];
-            setAllProviders(uniqueProviders);
-        } catch (error) {
-            console.error('Error fetching unsold products:', error);
-        }
-    };
 
     const filteredProducts = products.filter(product => {
-        const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(product.provider);
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.provider.toLowerCase().includes(searchQuery.toLowerCase());
+        const name = product.name || "";
+        const provider = product.provider || "";
+
+        const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(name);
+        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            provider.toLowerCase().includes(searchQuery.toLowerCase());
+
         return matchesProvider && matchesSearch;
     });
 
@@ -262,6 +296,18 @@ const ProductTable = () => {
                     >
                         Export PDF
                     </button>
+                    <div className="flex gap-2">
+                        <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer">
+                            Import Excel
+                            <input
+                                type="file"
+                                accept=".xlsx, .xls"
+                                onChange={handleExcelImport}
+                                className="hidden"
+                            />
+                        </label>
+                    </div>
+
                 </div>
             </div>
 
@@ -282,7 +328,7 @@ const ProductTable = () => {
                     <tbody>
                         {selectedProduct && (
                             <div
-                               className="fixed left-[80%] top-[100px] w-1/5 text-center transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
+                                className="fixed left-[80%] top-[100px] w-1/5 text-center transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
                             >
                                 <div className="flex justify-between items-center">
 
@@ -386,7 +432,7 @@ const ProductTable = () => {
                                 />
                             </div>
 
-                           <div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700">Unit</label>
                                 <select
                                     value={issueKg}
@@ -395,12 +441,9 @@ const ProductTable = () => {
                                     required
                                 >
                                     <option value="">Select Unit</option>
-                                    <option value="Kg">Kg</option>
+                                    <option value="KG">KG</option>
                                     <option value="Litre">Litre</option>
                                     <option value="Piece">Piece</option>
-                                    <option value="Nos">Nos</option>
-                                    <option value="Set">Set</option>
-                                    
                                 </select>
                             </div>
 
