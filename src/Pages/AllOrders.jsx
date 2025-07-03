@@ -11,6 +11,8 @@ const ProductTable = () => {
     const [issuedTo, setIssuedTo] = useState("");
     const [issueQuantity, setIssueQuantity] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const [issueKg, setIssueKg] = useState("KG")
     const [showIssuePopup, setShowIssuePopup] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -18,6 +20,8 @@ const ProductTable = () => {
     const [allProviders, setAllProviders] = useState([]);
     const [showProviderDropdown, setShowProviderDropdown] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [remarks, setRemarks] = useState("");
+
     const fetchUnsoldProducts = async () => {
         try {
             const response = await axios.get(
@@ -89,6 +93,7 @@ const ProductTable = () => {
         setIssuedTo("");
         setIssueQuantity("");
         setIssueKg("")
+        setRemarks("");
         setIsEditMode(false);
         setShowIssuePopup(true);
     };
@@ -98,6 +103,7 @@ const ProductTable = () => {
         setIssuedTo(product.name);
         setIssueQuantity(product.quantity);
         setIssueKg(product.unit);
+        setRemarks(product.remarks || "");
         setIsEditMode(true);
         setShowIssuePopup(true);
     };
@@ -111,8 +117,20 @@ const ProductTable = () => {
         const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             provider.toLowerCase().includes(searchQuery.toLowerCase());
 
-        return matchesProvider && matchesSearch;
+        // Check if product falls within the date range
+        let withinDateRange = true;
+        if (startDate) {
+            withinDateRange = withinDateRange && new Date(product.createdAt) >= new Date(startDate);
+        }
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            withinDateRange = withinDateRange && new Date(product.createdAt) <= end;
+        }
+
+        return matchesProvider && matchesSearch && withinDateRange;
     });
+
 
 
 
@@ -139,6 +157,7 @@ const ProductTable = () => {
             name: issuedTo,
             quantity: Number(issueQuantity),
             unit: issueKg,
+            remarks: remarks.trim(),
         };
 
         try {
@@ -161,6 +180,7 @@ const ProductTable = () => {
                     quantity: Number(issueQuantity),
                     unit: issueProduct.unit || "",
                     issuedTo: issuedTo.trim(),
+                    remarks: remarks.trim(),
                 };
 
                 const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`, issuePayload);
@@ -272,6 +292,39 @@ const ProductTable = () => {
                     </div>
                 )}
             </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Start Date:</label>
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="border px-2 py-1 rounded-md"
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">End Date:</label>
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="border px-2 py-1 rounded-md"
+                    />
+                </div>
+
+                <button
+                    onClick={() => {
+                        setStartDate("");
+                        setEndDate("");
+                    }}
+                    className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-md text-sm"
+                >
+                    Clear Filter
+                </button>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                 {/* Search Bar */}
                 <input
@@ -301,12 +354,13 @@ const ProductTable = () => {
                             Import Excel
                             <input
                                 type="file"
-                                accept=".xlsx, .xls"
+                                accept=".xlsx,.xls,.xlsm" // ← Added .xlsm
                                 onChange={handleExcelImport}
                                 className="hidden"
                             />
                         </label>
                     </div>
+
 
                 </div>
             </div>
@@ -316,6 +370,7 @@ const ProductTable = () => {
                 <table className="min-w-full">
                     <thead className="bg-indigo-700 text-white">
                         <tr>
+                            <th className="py-3 px-4 text-left">SI No.</th>
                             <th className="py-3 px-4 text-left">Product Name</th>
                             <th className="py-3 px-4 text-left">Quantity</th>
                             <th className="py-3 px-4 text-left">Unit</th>
@@ -326,21 +381,7 @@ const ProductTable = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {selectedProduct && (
-                            <div
-                                className="fixed left-[80%] top-[100px] w-1/5 text-center transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-6 rounded-xl shadow-2xl border-2 border-red-700 z-50 product-detail-popup"
-                            >
-                                <div className="flex justify-between items-center">
 
-
-                                </div>
-                                <hr />
-                                <div className="font-semibold space-y-2">
-                                    <p><strong> {selectedProduct.quantity} {selectedProduct.unit}</strong></p>
-
-                                </div>
-                            </div>
-                        )}
 
                         {filteredProducts.length === 0 ? (
                             <tr>
@@ -351,14 +392,13 @@ const ProductTable = () => {
                         ) : (
                             filteredProducts.map((product, index) => (
                                 <tr key={index} className="border-b hover:bg-gray-50">
+                                    <td className="py-3 px-4">{index + 1}</td>
                                     <td
                                         className="py-3 px-4 text-indigo-700 font-medium cursor-pointer hover:underline"
                                         onClick={() => setSelectedProduct(product)}
                                     >
                                         {product.name}
                                     </td>
-
-
                                     <td className="py-3 px-4">{product.quantity}</td>
                                     <td className="py-3 px-4">{product.unit}</td>
                                     <td className="py-3 px-4">{product.provider}</td>
@@ -370,7 +410,6 @@ const ProductTable = () => {
                                             }`}>
                                             {product.status}
                                         </span>
-
                                     </td>
                                     <td className="flex flex-col items-center mt-2 space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
                                         <button
@@ -394,6 +433,7 @@ const ProductTable = () => {
                                     </td>
                                 </tr>
                             ))
+
                         )}
                     </tbody>
                 </table>
@@ -441,11 +481,25 @@ const ProductTable = () => {
                                     required
                                 >
                                     <option value="">Select Unit</option>
-                                    <option value="KG">KG</option>
+                                    <option value="Kg">Kg</option>
                                     <option value="Litre">Litre</option>
                                     <option value="Piece">Piece</option>
+                                    <option value="Nos">Nos</option>
+                                    <option value="Set">Set</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Remarks</label>
+                                <textarea
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    placeholder="Enter remarks (optional)"
+                                    rows={3}
+                                />
+                            </div>
+
 
                             <div className="flex justify-end gap-2 pt-4">
                                 <button
