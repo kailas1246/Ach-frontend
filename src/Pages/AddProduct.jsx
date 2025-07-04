@@ -11,6 +11,7 @@ const AddProduct = () => {
         remarks: "",
         status: "not sold",
         provider: "",
+        date: "",
     });
 
     const [success, setSuccess] = useState("");
@@ -95,8 +96,6 @@ const AddProduct = () => {
                     <option value="piece">Piece</option>
                     <option value="box">Box</option>
                     <option value="ton">Ton</option>
-                    <option value="Nos">Nos</option>
-                    <option value="Set">Set</option>
                 </select>
 
                 <input
@@ -108,6 +107,15 @@ const AddProduct = () => {
                     required
                     className="w-full p-2 mb-4 rounded bg-white text-black border border-gray-600"
                 />
+                <input
+                    type="date"
+                    name="date"
+                    value={product.date}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-2 mb-4 rounded bg-white text-black border border-gray-600"
+                />
+
 
                 {/* Sold / Not Sold Select */}
                 <select
