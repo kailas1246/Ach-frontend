@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 
 const ProductTable = () => {
     const [products, setProducts] = useState([]);
+    const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
     const [issueProduct, setIssueProduct] = useState(null);
     const [issuedTo, setIssuedTo] = useState("");
     const [issueQuantity, setIssueQuantity] = useState("");
@@ -120,13 +121,14 @@ const ProductTable = () => {
         // Check if product falls within the date range
         let withinDateRange = true;
         if (startDate) {
-            withinDateRange = withinDateRange && new Date(product.createdAt) >= new Date(startDate);
+            withinDateRange = withinDateRange && new Date(product.date) >= new Date(startDate);
         }
         if (endDate) {
             const end = new Date(endDate);
             end.setHours(23, 59, 59, 999);
-            withinDateRange = withinDateRange && new Date(product.createdAt) <= end;
+            withinDateRange = withinDateRange && new Date(product.date) <= end;
         }
+
 
         return matchesProvider && matchesSearch && withinDateRange;
     });
@@ -181,6 +183,7 @@ const ProductTable = () => {
                     unit: issueProduct.unit || "",
                     issuedTo: issuedTo.trim(),
                     remarks: remarks.trim(),
+                    issueDate: issueDate
                 };
 
                 const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`, issuePayload);
@@ -377,6 +380,7 @@ const ProductTable = () => {
                             <th className="py-3 px-4 text-left">Provider</th>
                             <th className="py-3 px-4 text-left">Remarks</th>
                             <th className="py-3 px-4 text-left">Status</th>
+                            <th className="py-3 px-4 text-left">Date Added</th>
                             <th className="py-3 px-4 text-left">Actions</th>
                         </tr>
                     </thead>
@@ -411,6 +415,14 @@ const ProductTable = () => {
                                             {product.status}
                                         </span>
                                     </td>
+                                    <td className="py-3 px-4">
+                                        {new Date(product.date).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })}
+                                    </td>
+
                                     <td className="flex flex-col items-center mt-2 space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
                                         <button
                                             onClick={() => openIssuePopup(product)}
@@ -488,6 +500,18 @@ const ProductTable = () => {
                                     <option value="Set">Set</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Issue Date</label>
+                                <input
+                                    type="date"
+                                    value={issueDate}
+                                    onChange={(e) => setIssueDate(e.target.value)}
+                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    required
+                                />
+                            </div>
+
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Remarks</label>
