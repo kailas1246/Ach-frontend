@@ -498,6 +498,7 @@ const ProductTable = () => {
                                     <option value="Piece">Piece</option>
                                     <option value="Nos">Nos</option>
                                     <option value="Set">Set</option>
+                                    <option value="Ton">Ton</option>
                                 </select>
                             </div>
 
