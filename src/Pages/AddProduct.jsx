@@ -1,9 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNotification } from "../Components/NotificationProvider";
 
+
 const AddProduct = () => {
     const { addNotification } = useNotification();
+    const [existingProducts, setExistingProducts] = useState([]);
+    const [isNewProduct, setIsNewProduct] = useState(false);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`);
+                const names = [...new Set(res.data.map(p => p.name))];
+                setExistingProducts(names);
+            } catch (err) {
+                console.error("Failed to fetch product names", err);
+            }
+        };
+        fetchProducts();
+    }, []);
+
+
     const [product, setProduct] = useState({
         name: "",
         quantity: "",
@@ -55,15 +73,42 @@ const AddProduct = () => {
                 {success && <p className="text-green-400 mb-4">{success}</p>}
                 {error && <p className="text-red-400 mb-4">{error}</p>}
 
-                <input
-                    type="text"
-                    name="name"
-                    value={product.name}
-                    onChange={handleChange}
-                    placeholder="Product Name"
-                    required
-                    className="w-full p-2 mb-4 rounded bg-white text-black border border-gray-600"
-                />
+                <div className="mb-4">
+                    <label className="block text-sm font-medium  mb-1 text-black">Product Name</label>
+                    <select
+                        value={isNewProduct ? "new" : product.name}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "new") {
+                                setIsNewProduct(true);
+                                setProduct((prev) => ({ ...prev, name: "" }));
+                            } else {
+                                setIsNewProduct(false);
+                                setProduct((prev) => ({ ...prev, name: value }));
+                            }
+                        }}
+                        className="w-full p-2 rounded bg-white text-black border border-gray-600"
+                    >
+                        <option value="">-- Select a product --</option>
+                        {existingProducts.map((name, idx) => (
+                            <option key={idx} value={name}>{name}</option>
+                        ))}
+                        <option value="new">+ Add new product</option>
+                    </select>
+
+                    {isNewProduct && (
+                        <input
+                            type="text"
+                            name="name"
+                            value={product.name}
+                            onChange={handleChange}
+                            placeholder="Enter new product name"
+                            required
+                            className="mt-2 w-full p-2 rounded bg-white text-black border border-gray-600"
+                        />
+                    )}
+                </div>
+
                 <input
                     type="text"
                     name="provider"
@@ -91,12 +136,12 @@ const AddProduct = () => {
                     onChange={handleChange}
                     className="w-full p-2 mb-4 rounded bg-white text-black border border-gray-600"
                 >
-                    <option value="kg">Kilogram</option>
-                    <option value="litre">Litre</option>
-                    <option value="piece">Piece</option>
-                    <option value="box">Box</option>
-                    <option value="nos">Nos</option>
-                    <option value="ton">Ton</option>
+                    <option value="Kg">Kilogram</option>
+                    <option value="Litre">Litre</option>
+                    <option value="Piece">Piece</option>
+                    <option value="Box">Box</option>
+                    <option value="Ton">Ton</option>
+                    <option value="Nos">Nos</option>
                 </select>
 
                 <input
