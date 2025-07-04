@@ -155,8 +155,7 @@ const IssuedProductTable = () => {
                                 <th className="text-left py-3 px-4">Name</th>
                                 <th className="text-left py-3 px-4">Quantity</th>
                                 <th className="text-left py-3 px-4">Unit</th>
-                                <th className="text-left py-3 px-4">Issued To</th>
-                                <th className="text-left py-3 px-4">Issued At</th>
+                                <th className="py-3 px-4 text-left">Issued Date</th>
                                 <th className="text-left py-3 px-4">Remarks</th>
                                 <th className="text-left py-3 px-4">Action</th>
                             </tr>
@@ -174,8 +173,13 @@ const IssuedProductTable = () => {
                                         <td className="py-3 px-4">{item.name}</td>
                                         <td className="py-3 px-4">{item.quantity}</td>
                                         <td className="py-3 px-4">{item.unit}</td>
-                                        <td className="py-3 px-4">{item.issuedTo}</td>
-                                        <td className="py-3 px-4">{new Date(item.issuedAt).toLocaleString()}</td>
+                                        <td className="py-3 px-4">
+                                            {new Date(item.issueDate).toLocaleDateString('en-IN', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })}
+                                        </td>
                                         <td className="py-3 px-4">{item.remarks || "-"}</td>
                                         <td className="py-3 px-4">
                                             <button
@@ -185,6 +189,8 @@ const IssuedProductTable = () => {
                                                 Delete
                                             </button>
                                         </td>
+
+
                                     </tr>
 
                                 ))
