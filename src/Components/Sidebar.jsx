@@ -12,6 +12,7 @@ const Sidebar = () => {
         // { path: "/unsold", label: "Current Stock" },
         // { path: "/sold", label: "Store Issue" },
         { path: "issued-products", label: "Issued Products" },
+        { path: "/vehicle-insurance", label: "Vehicle Insurance" },
         { path: "/", label: "Logout" }
     ];
 
