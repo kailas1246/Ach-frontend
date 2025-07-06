@@ -6,6 +6,7 @@ import AllOrders from "./Pages/AllOrders";
 import Unsold from './Pages/Unsold';
 import Sold from "./Pages/Sold";
 import IssuedProducts from "./Pages/IssuedProducts";
+import VehicleInsurance from "./Pages/VehicleInsurance";
 
 function AppContent() {
   const location = useLocation();
@@ -19,9 +20,8 @@ function AppContent() {
           <Route path="/" element={<Login />} />
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/orders" element={<AllOrders />} />
-          <Route path="/unsold" element={<Unsold />} />
-          <Route path="/sold" element={<Sold />} />
           <Route path="/issued-products" element={<IssuedProducts />} />
+          <Route path="/vehicle-insurance" element={<VehicleInsurance />} />
         </Routes>
       </div>
     </div>
