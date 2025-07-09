@@ -60,7 +60,7 @@ export default function VehicleInsurance() {
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="bg-white shadow-md rounded-lg p-6">
-                <h1 className="text-2xl font-bold mb-6 text-gray-800">🚗 Vehicle Insurance Manager</h1>
+                <h1 className="text-2xl font-bold mb-6 text-black"> Vehicle Insurance Manager</h1>
 
                 {/* Add Form */}
                 <div className="mb-6 flex flex-col md:flex-row gap-4">
@@ -79,7 +79,7 @@ export default function VehicleInsurance() {
                     />
                     <button
                         onClick={handleAddVehicle}
-                        className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition"
+                        className="bg-white border-2 border-black text-black px-5 py-2 rounded-md hover:bg-black hover:text-white transition"
                     >
                         Add Vehicle
                     </button>
@@ -92,12 +92,12 @@ export default function VehicleInsurance() {
                         placeholder="🔍 Search by vehicle name..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border border-gray-300 p-2 rounded-md w-full md:max-w-xs"
+                        className="border border-black p-2 rounded-md w-full md:max-w-xs"
                     />
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="border border-gray-300 p-2 rounded-md"
+                        className="border border-black p-2 rounded-md"
                     >
                         <option value="all">All Statuses</option>
                         <option value="expired">Expired</option>
@@ -107,8 +107,8 @@ export default function VehicleInsurance() {
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm text-center border border-gray-200">
-                        <thead className="bg-gray-100 text-gray-700 font-semibold">
+                    <table className="min-w-full text-sm text-center border border-black0">
+                        <thead className="bg-gray-100 text-black font-semibold">
                             <tr>
                                 <th className="p-3 border">Vehicle</th>
                                 <th className="p-3 border">Insurance Expiry</th>
@@ -120,7 +120,7 @@ export default function VehicleInsurance() {
                             {filterVehicles.map((v, idx) => {
                                 const status = getStatus(v.expiry);
                                 return (
-                                    <tr key={idx} className="hover:bg-gray-50">
+                                    <tr key={idx} className="hover:bg-gray-100">
                                         <td className="p-3 border">{v.name}</td>
                                         <td className="p-3 border">
                                             {new Date(v.expiry).toLocaleDateString("en-GB", {
@@ -131,7 +131,7 @@ export default function VehicleInsurance() {
                                         </td>
                                         <td className="p-3 border">
                                             <span
-                                                className={`text-white text-xs px-2 py-1 rounded-full ${status.color}`}
+                                                className={`text-black text-xs px-2 py-1 rounded-full ${status.color}`}
                                             >
                                                 {status.label}
                                             </span>
@@ -139,7 +139,7 @@ export default function VehicleInsurance() {
                                         <td className="p-3 border">
                                             <button
                                                 onClick={() => handleDeleteVehicle(v._id)}
-                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black px-3 py-1 rounded-md transition"
                                             >
                                                 Delete
                                             </button>
