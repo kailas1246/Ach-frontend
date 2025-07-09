@@ -84,7 +84,7 @@ const IssuedProductTable = () => {
         <div className="min-h-screen bg-gray-100 p-6">
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-indigo-700">Issued Products</h1>
+                    <h1 className="text-3xl font-bold text-black">Issued Products</h1>
                     <p className="text-sm text-gray-500">Track, filter, search and manage issued inventory.</p>
                 </div>
 
@@ -124,13 +124,13 @@ const IssuedProductTable = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={exportIssuedPDF}
-                            className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm shadow"
+                            className="bg-white hover:bg-black hover:text-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm shadow"
                         >
                             Export PDF
                         </button>
                         <button
                             onClick={exportIssuedExcel}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm shadow"
+                            className="bg-white hover:bg-black hover:text-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm shadow"
                         >
                             Export Excel
                         </button>
@@ -150,7 +150,7 @@ const IssuedProductTable = () => {
                 {/* Table */}
                 <div className="overflow-x-auto rounded-lg shadow">
                     <table className="min-w-full bg-white">
-                        <thead className="bg-indigo-600 text-white">
+                        <thead className="bg-black text-white">
                             <tr>
                                 <th className="text-left py-3 px-4">Name</th>
                                 <th className="text-left py-3 px-4">Quantity</th>
@@ -184,7 +184,7 @@ const IssuedProductTable = () => {
                                         <td className="py-3 px-4">
                                             <button
                                                 onClick={() => handleDelete(item._id)}
-                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                                                className="bg-white border-2 border-black hover:bg-black hover:text-white text-black px-3 py-1 rounded-md text-sm"
                                             >
                                                 Delete
                                             </button>
