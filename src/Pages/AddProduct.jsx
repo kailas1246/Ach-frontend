@@ -90,10 +90,11 @@ const AddProduct = () => {
                         className="w-full p-2 rounded bg-white text-black border border-gray-600"
                     >
                         <option value="">-- Select a product --</option>
+                        <option value="new">+ Add new product</option>
                         {existingProducts.map((name, idx) => (
                             <option key={idx} value={name}>{name}</option>
                         ))}
-                        <option value="new">+ Add new product</option>
+
                     </select>
 
                     {isNewProduct && (
@@ -176,10 +177,14 @@ const AddProduct = () => {
 
                 <button onClick={handleSuccess}
                     type="submit"
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
+                    className="w-full py-2 bg-white hover:bg-black text-black border-2 border-black hover:text-white rounded font-semibold"
                 >
                     Add Product
                 </button>
+
+                {/* <span className="text-black font-bold">Stock Items Entry - </span>
+                <button className="text-blue-600 font-bold hover:text-blue-700">Click Here</button> */}
+
             </form>
         </div>
     );
