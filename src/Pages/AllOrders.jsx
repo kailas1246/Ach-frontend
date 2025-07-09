@@ -253,13 +253,13 @@ const ProductTable = () => {
 
     return (
         <div className="p-4 sm:p-8 bg-gray-100 min-h-screen">
-            <h2 className="text-3xl font-bold mb-6 text-center text-indigo-700">Product Inventory</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-black">Product Inventory</h2>
 
             {/* Provider Filter Dropdown */}
             <div className="relative inline-block text-left mb-4">
                 <button
                     onClick={() => setShowProviderDropdown(!showProviderDropdown)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700"
+                    className="px-4 py-2 bg-white text-black border-2 border-black rounded shadow hover:bg-black hover:text-white"
                 >
                     {selectedProviders.length === allProviders.length ? 'All Providers' :
                         selectedProviders.length === 0 ? 'Select Provider(s)' :
@@ -335,25 +335,25 @@ const ProductTable = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name or provider"
-                    className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                 />
 
                 {/* Export Buttons */}
                 <div className="flex gap-2">
                     <button
                         onClick={() => exportToCSV(filteredProducts)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
+                        className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm"
                     >
                         Export CSV
                     </button>
                     <button
                         onClick={() => exportToPDF(filteredProducts)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
+                        className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm"
                     >
                         Export PDF
                     </button>
                     <div className="flex gap-2">
-                        <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer">
+                        <label className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm cursor-pointer">
                             Import Excel
                             <input
                                 type="file"
@@ -371,7 +371,7 @@ const ProductTable = () => {
 
             <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
                 <table className="min-w-full">
-                    <thead className="bg-indigo-700 text-white">
+                    <thead className="bg-black text-white">
                         <tr>
                             <th className="py-3 px-4 text-left">SI No.</th>
                             <th className="py-3 px-4 text-left">Product Name</th>
@@ -395,19 +395,19 @@ const ProductTable = () => {
                             </tr>
                         ) : (
                             filteredProducts.map((product, index) => (
-                                <tr key={index} className="border-b hover:bg-gray-50">
-                                    <td className="py-3 px-4">{index + 1}</td>
+                                <tr key={index} className="border-b bg-white hover:bg-gray-200">
+                                    <td className="px-4">{index + 1}</td>
                                     <td
-                                        className="py-3 px-4 text-indigo-700 font-medium cursor-pointer hover:underline"
+                                        className="px-4 text-[10px] text-black font-normal"
                                         onClick={() => setSelectedProduct(product)}
                                     >
                                         {product.name}
                                     </td>
-                                    <td className="py-3 px-4">{product.quantity}</td>
-                                    <td className="py-3 px-4">{product.unit}</td>
-                                    <td className="py-3 px-4">{product.provider}</td>
-                                    <td className="py-3 px-4">{product.remarks || '-'}</td>
-                                    <td className="py-3 px-4">
+                                    <td className="px-4">{product.quantity}</td>
+                                    <td className="px-4">{product.unit}</td>
+                                    <td className="px-4">{product.provider}</td>
+                                    <td className="px-4">{product.remarks || '-'}</td>
+                                    <td className="px-4">
                                         <span className={`px-2 py-1 text-xs rounded-full font-medium ${product.status.toLowerCase() === 'not sold'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : 'bg-green-100 text-green-700'
@@ -426,19 +426,19 @@ const ProductTable = () => {
                                     <td className="flex flex-col items-center mt-2 space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
                                         <button
                                             onClick={() => openIssuePopup(product)}
-                                            className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded"
+                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
                                         >
                                             Issue
                                         </button>
                                         <button
                                             onClick={() => openEditPopup(product)}
-                                            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-3 py-1 rounded"
+                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
                                         >
                                             Edit
                                         </button>
                                         <button
                                             onClick={() => handleDelete(product._id)}
-                                            className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded"
+                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
                                         >
                                             Delete
                                         </button>
@@ -498,7 +498,6 @@ const ProductTable = () => {
                                     <option value="Piece">Piece</option>
                                     <option value="Nos">Nos</option>
                                     <option value="Set">Set</option>
-                                    <option value="Ton">Ton</option>
                                 </select>
                             </div>
 
