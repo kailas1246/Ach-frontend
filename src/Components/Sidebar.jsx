@@ -8,25 +8,22 @@ const Sidebar = () => {
 
     const links = [
         { path: "/add-product", label: "Add Product" },
-        { path: "/orders", label: "Current Stock" },
-        // { path: "/unsold", label: "Current Stock" },
-        // { path: "/sold", label: "Store Issue" },
-        { path: "issued-products", label: "Issued Products" },
-        { path: "/vehicle-insurance", label: "Vehicle Insurance" },
-        { path: "/", label: "Logout" }
+        { path: "/orders", label: "All Products" },
+        { path: "/issued-products", label: "Issued Products" },
+        { path: "/vehicle-insurance", label: "Vehicle Insurance" }
     ];
 
     return (
         <>
             {/* Desktop Sidebar */}
-            <div className="hidden md:flex flex-col bg-white text-indigi-700 w-[290px] h-screen fixed top-0 left-0 p-6 z-40">
+            <div className="hidden md:flex flex-col bg-white text-black w-[290px] h-screen fixed top-0 left-0 p-6 z-40">
                 <h2 className="text-2xl font-bold mb-6">Inventory Control</h2>
                 <nav className="flex flex-col space-y-4">
                     {links.map((link) => (
                         <Link
                             key={link.path}
                             to={link.path}
-                            className={` pl-2 py-2 rounded-md hover:text-white hover:bg-indigo-800  ${location.pathname === link.path ? "rounded-md text-white bg-indigo-700 pl-2 py-2" : ""
+                            className={` pl-2 py-2 rounded-md hover:text-black hover:bg-white border-2 hover:border-black  ${location.pathname === link.path ? "rounded-md text-white bg-black pl-2 py-2" : ""
                                 }`}
                         >
                             {link.label}
