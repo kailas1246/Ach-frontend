@@ -59,7 +59,7 @@ export default function Login() {
                 />
                 <button
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded font-semibold transition"
+                    className="w-full bg-white border-2 border-black hover:bg-black hover:text-white text-black py-3 rounded font-semibold transition"
                 >
                     Login
                 </button>
