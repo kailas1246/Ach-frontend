@@ -244,32 +244,43 @@ const exportToPDF = (data) => {
 };
 
 
-   const exportToCSV = (data) => {
-    const csvData = data.map((product, index) => ({
-        "SI No.": index + 1,
-        "Name": product.name,
-        "Quantity": product.quantity,
-        "Unit": product.unit,
-        "Provider": product.provider,
-        "Remarks": product.remarks || '-',
-        "Status": product.status,
-        "Date Added": new Date(product.date).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })
-    }));
+  const exportToExcel = (data) => {
+    const wsData = [
+        ["SI No.", "Name", "Quantity", "Unit", "Provider", "Remarks", "Status", "Date Added"],
+        ...data.map((product, index) => [
+            index + 1,
+            product.name,
+            product.quantity,
+            product.unit,
+            product.provider,
+            product.remarks || "-",
+            product.status,
+            new Date(product.date).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            })
+        ])
+    ];
 
-    const csv = Papa.unparse(csvData);  // PapaParse handles proper escaping
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "products.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Apply black fill to header row
+    const headerStyle = {
+        fill: { fgColor: { rgb: "000000" } }, // black background
+        font: { color: { rgb: "FFFFFF" }, bold: true } // white bold text
+    };
+
+    const headerCols = ["A1","B1","C1","D1","E1","F1","G1","H1"];
+    headerCols.forEach(cell => {
+        if (!ws[cell]) return;
+        ws[cell].s = headerStyle;
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+
+    XLSX.writeFile(wb, "products.xlsx", { cellStyles: true });
 };
 
 
