@@ -200,54 +200,78 @@ const ProductTable = () => {
     };
 
 
-    const exportToPDF = (data) => {
-        const doc = new jsPDF();
-        doc.text("Products", 14, 16);
+const exportToPDF = (data) => {
+    const doc = new jsPDF();
+    doc.text("Products", 14, 16);
 
-        const tableColumn = ["Name", "Quantity", "Unit", "Provider", "Remarks", "Status"];
-        const tableRows = [];
+    const tableColumn = [
+        "SI No.",
+        "Name",
+        "Quantity",
+        "Unit",
+        "Provider",
+        "Remarks",
+        "Status",
+        "Date Added"
+    ];
 
-        data.forEach(product => {
-            tableRows.push([
-                product.name,
-                product.quantity,
-                product.unit,
-                product.provider,
-                product.remarks || '-',
-                product.status
-            ]);
-        });
+    const tableRows = [];
 
-        autoTable(doc, {
-            head: [tableColumn],
-            body: tableRows,
-            startY: 20,
-        });
+    data.forEach((product, index) => {
+        tableRows.push([
+            index + 1,
+            product.name,
+            product.quantity,
+            product.unit,
+            product.provider,
+            product.remarks || '-',
+            product.status,
+            new Date(product.date).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            }),
+        ]);
+    });
 
-        doc.save("products.pdf");
-    };
+    autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+    });
 
-    const exportToCSV = (data) => {
-        const csvData = data.map(product => ({
-            Name: product.name,
-            Quantity: product.quantity,
-            Unit: product.unit,
-            Provider: product.provider,
-            Remarks: product.remarks || '-',
-            Status: product.status
-        }));
+    doc.save("products.pdf");
+};
 
-        const csv = Papa.unparse(csvData);
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
 
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", "products.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+   const exportToCSV = (data) => {
+    const csvData = data.map((product, index) => ({
+        "SI No.": index + 1,
+        "Name": product.name,
+        "Quantity": product.quantity,
+        "Unit": product.unit,
+        "Provider": product.provider,
+        "Remarks": product.remarks || '-',
+        "Status": product.status,
+        "Date Added": new Date(product.date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        })
+    }));
+
+    const csv = Papa.unparse(csvData);  // PapaParse handles proper escaping
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "products.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 
 
 
