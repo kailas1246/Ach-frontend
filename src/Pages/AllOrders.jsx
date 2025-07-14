@@ -531,7 +531,10 @@ const exportToPDF = (data) => {
                                     <option value="Kg">Kg</option>
                                     <option value="Litre">Litre</option>
                                     <option value="Piece">Piece</option>
+                                    <option value="Box">Box</option>
+                                    <option value="Ton">Ton</option>
                                     <option value="Nos">Nos</option>
+                                    <option value="Mtr">Mtr</option>
                                     <option value="Set">Set</option>
                                 </select>
                             </div>
