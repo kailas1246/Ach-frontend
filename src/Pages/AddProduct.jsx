@@ -144,6 +144,7 @@ const AddProduct = () => {
                     <option value="Ton">Ton</option>
                     <option value="Nos">Nos</option>
                     <option value="Mtr">Mtr</option>
+                    <option value="Set">Set</option>
                 </select>
 
                 <input
