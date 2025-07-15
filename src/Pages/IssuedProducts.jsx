@@ -44,13 +44,13 @@ const IssuedProductTable = () => {
     const exportIssuedPDF = () => {
         const doc = new jsPDF();
         autoTable(doc, {
-            head: [["Product Name", "Quantity", "Unit", "Issued To", "Issued At", "Remarks"]],
+            head: [["Product Name", "Quantity", "Unit", "Issued To", "issue Date", "Remarks"]],
             body: filteredProducts.map((prod) => [
                 prod.name,
                 prod.quantity,
                 prod.unit,
                 prod.issuedTo,
-                new Date(prod.issuedAt).toLocaleString(),
+                new Date(prod.issueDate).toLocaleString(),
                 prod.remarks || "-",
             ]),
 
