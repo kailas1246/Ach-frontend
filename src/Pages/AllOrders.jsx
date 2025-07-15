@@ -433,7 +433,7 @@ const exportToPDF = (data) => {
                                 <tr key={index} className="border-b bg-white hover:bg-gray-200">
                                     <td className="px-4">{index + 1}</td>
                                     <td
-                                        className="px-4 text-[10px] text-black font-normal"
+                                        className="px-4 text-black font-normal"
                                         onClick={() => setSelectedProduct(product)}
                                     >
                                         {product.name}
