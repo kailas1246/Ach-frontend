@@ -65,7 +65,7 @@ const IssuedProductTable = () => {
             Quantity: item.quantity,
             Unit: item.unit,
             "Issued To": item.issuedTo,
-            "Issued At": new Date(item.issuedAt).toLocaleString(),
+            "issueDate": item.issueDate,
             Remarks: item.remarks || "-",
         }));
 
