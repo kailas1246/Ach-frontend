@@ -376,7 +376,7 @@ const exportToPDF = (data) => {
                 {/* Export Buttons */}
                 <div className="flex gap-2">
                     <button
-                        onClick={() => exportToCSV(filteredProducts)}
+                        onClick={() => exportToExcel(filteredProducts)}
                         className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm"
                     >
                         Export CSV
