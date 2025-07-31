@@ -153,6 +153,7 @@ const IssuedProductTable = () => {
                         <thead className="bg-black text-white">
                             <tr>
                                 <th className="text-left py-3 px-4">Name</th>
+                                <th className="text-left py-3 px-4">Issued To</th>
                                 <th className="text-left py-3 px-4">Quantity</th>
                                 <th className="text-left py-3 px-4">Unit</th>
                                 <th className="py-3 px-4 text-left">Issued Date</th>
@@ -171,6 +172,7 @@ const IssuedProductTable = () => {
                                 filteredProducts.map((item) => (
                                     <tr key={item._id} className="hover:bg-gray-50 border-b">
                                         <td className="py-3 px-4">{item.name}</td>
+                                        <td className="py-3 px-4">{item.issuedTo}</td>
                                         <td className="py-3 px-4">{item.quantity}</td>
                                         <td className="py-3 px-4">{item.unit}</td>
                                         <td className="py-3 px-4">
