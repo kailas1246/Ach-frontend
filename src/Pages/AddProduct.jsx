@@ -7,6 +7,8 @@ const AddProduct = () => {
     const { addNotification } = useNotification();
     const [existingProducts, setExistingProducts] = useState([]);
     const [isNewProduct, setIsNewProduct] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -41,21 +43,58 @@ const AddProduct = () => {
             ...prev,
             [name]: value,
         }));
+
+        // If typing the new product name, show filtered suggestions
+        if (name === "name" && isNewProduct) {
+            const q = value.trim().toLowerCase();
+            if (q.length === 0) {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            } else {
+                const matches = existingProducts.filter((n) =>
+                    n.toLowerCase().includes(q)
+                );
+                setSuggestions(matches);
+                setShowSuggestions(matches.length > 0);
+            }
+        }
     };
 
-    const handleSuccess = () => {
-        addNotification({
-            type: 'success',
-            message: 'Product added successfully!',
-        });
+    const handleSelectSuggestion = (name) => {
+        setProduct((prev) => ({ ...prev, name }));
+        setIsNewProduct(false);
+        setSuggestions([]);
+        setShowSuggestions(false);
     };
+
+    // Success notifications are shown inline; disabled toast notifications for success
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Prevent adding a new product with a name that already exists (case-insensitive)
+        const nameTrimmed = (product.name || "").trim();
+        if (isNewProduct && nameTrimmed.length > 0) {
+            const exists = existingProducts.some((n) => n.toLowerCase() === nameTrimmed.toLowerCase());
+            if (exists) {
+                const msg = "Item already exists.";
+                setError(msg);
+                addNotification({ type: 'error', message: msg });
+                return;
+            }
+        }
+
         try {
             await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`, product);
             setError("");
-            setProduct({ name: "", quantity: "", unit: "kg", remarks: "", status: "not sold" });
+            setSuccess("Product added successfully!");
+            // Show success toast notification
+            addNotification({ type: 'success', message: 'Product added successfully!' });
+            // Add the new name to existingProducts so it's available in the dropdown
+            if (nameTrimmed.length > 0) {
+                setExistingProducts((prev) => [...new Set([...prev, nameTrimmed])]);
+            }
+            setProduct({ name: "", quantity: "", unit: "kg", remarks: "", status: "not sold", provider: "", date: "" });
+            setIsNewProduct(false);
         } catch (err) {
             setError("Failed to add product.");
             setSuccess("");
@@ -98,15 +137,34 @@ const AddProduct = () => {
                     </select>
 
                     {isNewProduct && (
-                        <input
-                            type="text"
-                            name="name"
-                            value={product.name}
-                            onChange={handleChange}
-                            placeholder="Enter new product name"
-                            required
-                            className="mt-2 w-full p-2 rounded bg-white text-black border border-gray-600"
-                        />
+                        <div className="relative mt-2">
+                            <input
+                                type="text"
+                                name="name"
+                                autoComplete="off"
+                                value={product.name}
+                                onChange={handleChange}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                                onFocus={() => setShowSuggestions(suggestions.length > 0)}
+                                placeholder="Enter new product name"
+                                required
+                                className="w-full p-2 rounded bg-white text-black border border-gray-600"
+                            />
+
+                            {showSuggestions && suggestions.length > 0 && (
+                                <div className="absolute left-0 right-0 bg-white text-black border border-gray-300 mt-1 rounded shadow max-h-40 overflow-auto z-10">
+                                    {suggestions.map((s, i) => (
+                                        <div
+                                            key={i}
+                                            onMouseDown={() => handleSelectSuggestion(s)}
+                                            className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
+                                        >
+                                            {s}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
@@ -177,7 +235,7 @@ const AddProduct = () => {
                     <option value="not sold">Not Sold</option>
                 </select>
 
-                <button onClick={handleSuccess}
+                <button
                     type="submit"
                     className="w-full py-2 bg-white hover:bg-black text-black border-2 border-black hover:text-white rounded font-semibold"
                 >
