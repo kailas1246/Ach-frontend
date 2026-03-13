@@ -22,6 +22,8 @@ const ProductTable = () => {
     const [showProviderDropdown, setShowProviderDropdown] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [remarks, setRemarks] = useState("");
+    const [showReceiptPopup, setShowReceiptPopup] = useState(false);
+    const [receiptList, setReceiptList] = useState([]);
 
     const fetchUnsoldProducts = async () => {
         try {
@@ -243,6 +245,20 @@ const exportToPDF = (data) => {
     doc.save("products.pdf");
 };
 
+    const openReceiptPopup = async (product) => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`);
+            const all = res.data || [];
+            const receipts = all.filter(r => r.productId === product._id || r.productId === product.productId || String(r.productId) === String(product._id));
+            setReceiptList(receipts);
+            setShowReceiptPopup(true);
+        } catch (err) {
+            console.error('Error fetching receipts', err);
+            setReceiptList([]);
+            setShowReceiptPopup(true);
+        }
+    };
+
 
   const exportToExcel = (data) => {
     const wsData = [
@@ -299,6 +315,18 @@ const exportToPDF = (data) => {
                     {selectedProviders.length === allProviders.length ? 'All Providers' :
                         selectedProviders.length === 0 ? 'Select Provider(s)' :
                             `${selectedProviders.length} Selected`}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => { /* placeholder: open finder UI later */ }}
+                    title="Find products by real (issued) date"
+                    className="ml-4 inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-2 border-black rounded shadow hover:bg-black hover:text-white"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H6zm-3 9v3a2 2 0 002 2h10a2 2 0 002-2v-3H3zm6-6a1 1 0 112 0v1h-2V5z" clipRule="evenodd" />
+                    </svg>
+                    Real Date Finder
                 </button>
 
                 {showProviderDropdown && (
@@ -405,18 +433,18 @@ const exportToPDF = (data) => {
 
 
             <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-                <table className="min-w-full">
+                <table className="w-full table-auto text-sm">
                     <thead className="bg-black text-white">
                         <tr>
-                            <th className="py-3 px-4 text-left">SI No.</th>
-                            <th className="py-3 px-4 text-left">Product Name</th>
-                            <th className="py-3 px-4 text-left">Quantity</th>
-                            <th className="py-3 px-4 text-left">Unit</th>
-                            <th className="py-3 px-4 text-left">Provider</th>
-                            <th className="py-3 px-4 text-left">Remarks</th>
-                            <th className="py-3 px-4 text-left">Status</th>
-                            <th className="py-3 px-4 text-left">Date Added</th>
-                            <th className="py-3 px-4 text-left">Actions</th>
+                            <th className="py-1 px-2 text-left">SI No.</th>
+                            <th className="py-1 px-2 text-left">Product Name</th>
+                            <th className="py-1 px-2 text-left">Quantity</th>
+                            <th className="py-1 px-2 text-left">Unit</th>
+                            <th className="py-1 px-2 text-left">Provider</th>
+                            <th className="py-1 px-2 text-left">Remarks</th>
+                            <th className="py-1 px-2 text-left">Status</th>
+                            <th className="py-1 px-2 text-left">Date Added</th>
+                            <th className="py-1 px-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -424,33 +452,35 @@ const exportToPDF = (data) => {
 
                         {filteredProducts.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="text-center py-6 text-gray-500">
+                                <td colSpan="9" className="text-center py-3 text-gray-500">
                                     No unsold products found.
                                 </td>
                             </tr>
                         ) : (
                             filteredProducts.map((product, index) => (
                                 <tr key={index} className="border-b bg-white hover:bg-gray-200">
-                                    <td className="px-4">{index + 1}</td>
+                                    <td className="px-2 py-1">{index + 1}</td>
                                     <td
-                                        className="px-4 text-black font-normal"
+                                        className="px-2 py-1 text-black font-normal break-words"
                                         onClick={() => setSelectedProduct(product)}
+                                        title={product.name}
+                                        style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}
                                     >
                                         {product.name}
                                     </td>
-                                    <td className="px-4">{product.quantity}</td>
-                                    <td className="px-4">{product.unit}</td>
-                                    <td className="px-4">{product.provider}</td>
-                                    <td className="px-4">{product.remarks || '-'}</td>
-                                    <td className="px-4">
-                                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${product.status.toLowerCase() === 'not sold'
+                                    <td className="px-2 py-1">{product.quantity}</td>
+                                    <td className="px-2 py-1">{product.unit}</td>
+                                    <td className="px-2 py-1">{product.provider}</td>
+                                    <td className="px-2 py-1">{product.remarks || '-'}</td>
+                                    <td className="px-2 py-1">
+                                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${product.status.toLowerCase() === 'not sold'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : 'bg-green-100 text-green-700'
                                             }`}>
                                             {product.status}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-1 px-2 whitespace-nowrap">
                                         {new Date(product.date).toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
@@ -458,25 +488,33 @@ const exportToPDF = (data) => {
                                         })}
                                     </td>
 
-                                    <td className="flex flex-col items-center mt-2 space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
-                                        <button
-                                            onClick={() => openIssuePopup(product)}
-                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
-                                        >
-                                            Issue
-                                        </button>
-                                        <button
-                                            onClick={() => openEditPopup(product)}
-                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(product._id)}
-                                            className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-sm px-3 py-1 rounded"
-                                        >
-                                            Delete
-                                        </button>
+                                    <td className="px-2 py-1 whitespace-nowrap">
+                                        <div className="inline-flex gap-2 items-center">
+                                            <button
+                                                onClick={() => openIssuePopup(product)}
+                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                            >
+                                                Issue
+                                            </button>
+                                            <button
+                                                onClick={() => openEditPopup(product)}
+                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                            onClick={() => openReceiptPopup(product)}
+                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                            >
+                                                All Receipt
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(product._id)}
+                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -489,20 +527,30 @@ const exportToPDF = (data) => {
             {/* Issue/Edit Modal */}
             {showIssuePopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
-                        <h3 className="text-xl font-semibold mb-4">
+                    <div className="bg-white p-4 rounded-lg w-full max-w-sm shadow-lg relative">
+                        <h3 className="text-lg font-semibold mb-2">
                             {isEditMode ? "Edit Product" : "Issue Product"}
                         </h3>
-                        <form onSubmit={handleIssueSubmit} className="space-y-4">
+                        <form onSubmit={handleIssueSubmit} className="space-y-2 text-sm">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Issued To</label>
                                 <input
                                     type="text"
                                     value={issuedTo}
                                     onChange={(e) => setIssuedTo(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     placeholder="Enter name"
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                                <input
+                                    type="text"
+                                    value={issueProduct ? issueProduct.quantity : ''}
+                                    readOnly
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md bg-gray-100 cursor-not-allowed text-sm"
                                 />
                             </div>
 
@@ -512,7 +560,7 @@ const exportToPDF = (data) => {
                                     type="number"
                                     value={issueQuantity}
                                     onChange={(e) => setIssueQuantity(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     placeholder="Enter quantity"
                                     min="1"
                                     required
@@ -524,7 +572,7 @@ const exportToPDF = (data) => {
                                 <select
                                     value={issueKg}
                                     onChange={(e) => setIssueKg(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     required
                                 >
                                     <option value="">Select Unit</option>
@@ -545,7 +593,7 @@ const exportToPDF = (data) => {
                                     type="date"
                                     value={issueDate}
                                     onChange={(e) => setIssueDate(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     required
                                 />
                             </div>
@@ -556,29 +604,65 @@ const exportToPDF = (data) => {
                                 <textarea
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     placeholder="Enter remarks (optional)"
-                                    rows={3}
+                                    rows={2}
                                 />
                             </div>
 
 
-                            <div className="flex justify-end gap-2 pt-4">
+                            <div className="flex justify-end gap-2 pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setShowIssuePopup(false)}
-                                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                    className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                                    className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
                                 >
                                     {isEditMode ? "Update" : "Issue"}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* All Receipts Modal */}
+            {showReceiptPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded-lg w-full max-w-md shadow-lg relative">
+                        <h3 className="text-lg font-semibold mb-2">All Receipts</h3>
+                        <div className="max-h-72 overflow-y-auto text-sm">
+                            {receiptList.length === 0 ? (
+                                <p className="text-gray-500">No receipts found for this product.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-600 border-b">
+                                        <tr>
+                                            <th className="py-1">Qty</th>
+                                            <th className="py-1">Issue Date</th>
+                                            <th className="py-1">Real Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {receiptList.map((r, i) => (
+                                            <tr key={i} className="border-b">
+                                                <td className="py-1">{r.quantity}</td>
+                                                <td className="py-1">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
+                                                <td className="py-1">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div className="flex justify-end mt-3">
+                            <button onClick={() => setShowReceiptPopup(false)} className="px-3 py-1 bg-gray-300 rounded text-sm">Close</button>
+                        </div>
                     </div>
                 </div>
             )}
