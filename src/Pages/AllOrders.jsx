@@ -330,7 +330,7 @@ const exportToPDF = (data) => {
                 </button>
 
                 {showProviderDropdown && (
-                    <div className="absolute z-10 mt-2 w-56 bg-white border border-gray-200 rounded shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-10 mt-2 w-56 bg-white border border-black rounded shadow-lg max-h-60 overflow-y-auto">
                         <label className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100">
                             <input
                                 type="checkbox"
@@ -432,19 +432,19 @@ const exportToPDF = (data) => {
             </div>
 
 
-            <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-                <table className="w-full table-auto text-sm">
-                    <thead className="bg-black text-white">
+            <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
+                <table className="w-full table-auto text-sm border-collapse">
+                    <thead className="bg-black text-white sticky top-0 z-20">
                         <tr>
-                            <th className="py-1 px-2 text-left">SI No.</th>
-                            <th className="py-1 px-2 text-left">Product Name</th>
-                            <th className="py-1 px-2 text-left">Quantity</th>
-                            <th className="py-1 px-2 text-left">Unit</th>
-                            <th className="py-1 px-2 text-left">Provider</th>
-                            <th className="py-1 px-2 text-left">Remarks</th>
-                            <th className="py-1 px-2 text-left">Status</th>
-                            <th className="py-1 px-2 text-left">Date Added</th>
-                            <th className="py-1 px-2 text-left">Actions</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-1/3">Product Name</th>
+                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
+                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-28">Vendor</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Status</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Date Added</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -458,21 +458,21 @@ const exportToPDF = (data) => {
                             </tr>
                         ) : (
                             filteredProducts.map((product, index) => (
-                                <tr key={index} className="border-b bg-white hover:bg-gray-200">
-                                    <td className="px-2 py-1">{index + 1}</td>
+                                <tr key={index} className="border-b border-black bg-white hover:bg-gray-200">
+                                    <td className="px-2 py-1 border-l border-black first:border-l-0">{index + 1}</td>
                                     <td
-                                        className="px-2 py-1 text-black font-normal break-words"
+                                        className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3"
                                         onClick={() => setSelectedProduct(product)}
                                         title={product.name}
                                         style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}
                                     >
                                         {product.name}
                                     </td>
-                                    <td className="px-2 py-1">{product.quantity}</td>
-                                    <td className="px-2 py-1">{product.unit}</td>
-                                    <td className="px-2 py-1">{product.provider}</td>
-                                    <td className="px-2 py-1">{product.remarks || '-'}</td>
-                                    <td className="px-2 py-1">
+                                    <td className="px-2 py-1 border-l border-black w-15 text-center">{product.quantity}</td>
+                                    <td className="px-2 py-1 border-l border-black w-20">{product.unit}</td>
+                                    <td className="px-2 py-1 border-l border-black w-28 text-center">{product.provider}</td>
+                                    <td className="px-2 py-1 border-l border-black">{product.remarks || '-'}</td>
+                                    <td className="px-2 py-1 border-l border-black">
                                         <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${product.status.toLowerCase() === 'not sold'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : 'bg-green-100 text-green-700'
@@ -480,7 +480,7 @@ const exportToPDF = (data) => {
                                             {product.status}
                                         </span>
                                     </td>
-                                    <td className="py-1 px-2 whitespace-nowrap">
+                                    <td className="py-1 px-2 whitespace-nowrap border-l border-black">
                                         {new Date(product.date).toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
@@ -488,7 +488,7 @@ const exportToPDF = (data) => {
                                         })}
                                     </td>
 
-                                    <td className="px-2 py-1 whitespace-nowrap">
+                                    <td className="px-2 py-1 whitespace-nowrap border-l border-black">
                                         <div className="inline-flex gap-2 items-center">
                                             <button
                                                 onClick={() => openIssuePopup(product)}
@@ -506,7 +506,7 @@ const exportToPDF = (data) => {
                                                             onClick={() => openReceiptPopup(product)}
                                                 className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
                                             >
-                                                All Receipt
+                                                All Issued
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(product._id)}
@@ -643,17 +643,17 @@ const exportToPDF = (data) => {
                                 <table className="w-full text-sm">
                                     <thead className="text-left text-xs text-gray-600 border-b">
                                         <tr>
-                                            <th className="py-1">Qty</th>
-                                            <th className="py-1">Issue Date</th>
-                                            <th className="py-1">Real Date</th>
+                                            <th className="py-1 border-l border-black first:border-l-0">Qty</th>
+                                            <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
+                                            <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {receiptList.map((r, i) => (
                                             <tr key={i} className="border-b">
-                                                <td className="py-1">{r.quantity}</td>
-                                                <td className="py-1">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
-                                                <td className="py-1">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                                                <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
+                                                <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
+                                                <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
