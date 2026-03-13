@@ -1,674 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import Papa from 'papaparse';
-import * as XLSX from "xlsx";
+import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
-const ProductTable = () => {
-    const [products, setProducts] = useState([]);
-    const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
-    const [issueProduct, setIssueProduct] = useState(null);
-    const [issuedTo, setIssuedTo] = useState("");
-    const [issueQuantity, setIssueQuantity] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [issueKg, setIssueKg] = useState("KG")
-    const [showIssuePopup, setShowIssuePopup] = useState(false);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [selectedProviders, setSelectedProviders] = useState([]);
-    const [allProviders, setAllProviders] = useState([]);
-    const [showProviderDropdown, setShowProviderDropdown] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [remarks, setRemarks] = useState("");
-    const [showReceiptPopup, setShowReceiptPopup] = useState(false);
-    const [receiptList, setReceiptList] = useState([]);
+const Sidebar = () => {
+    const [open, setOpen] = useState(false);
+    const location = useLocation();
 
-    const fetchUnsoldProducts = async () => {
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`
-            );
-            setProducts(response.data);
-
-            const uniqueProviders = [...new Set(response.data.map(p => p.name))];
-            setAllProviders(uniqueProviders);
-        } catch (error) {
-            console.error('Error fetching unsold products:', error);
-        }
-    };
-
-
-
-    const handleProviderChange = (provider) => {
-        if (provider === 'ALL') {
-            if (selectedProviders.length === allProviders.length) {
-                setSelectedProviders([]);
-            } else {
-                setSelectedProviders(allProviders);
-            }
-        } else {
-            setSelectedProviders(prevSelected =>
-                prevSelected.includes(provider)
-                    ? prevSelected.filter(p => p !== provider)
-                    : [...prevSelected, provider]
-            );
-        }
-    };
-
-
-
-    const handleExcelImport = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = async (event) => {
-            const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-            try {
-                await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/import`, jsonData);
-                alert("Products imported successfully.");
-                fetchUnsoldProducts();
-            } catch (err) {
-                alert("Failed to import products");
-                console.error(err);
-            }
-        };
-
-        reader.readAsArrayBuffer(file);
-    };
-
-
-    useEffect(() => {
-        fetchUnsoldProducts();
-    }, []);
-
-
-    const openIssuePopup = (product) => {
-        setIssueProduct(product);
-        setIssuedTo("");
-        setIssueQuantity("");
-        setIssueKg("")
-        setRemarks("");
-        setIsEditMode(false);
-        setShowIssuePopup(true);
-    };
-
-    const openEditPopup = (product) => {
-        setIssueProduct(product);
-        setIssuedTo(product.name);
-        setIssueQuantity(product.quantity);
-        setIssueKg(product.unit);
-        setRemarks(product.remarks || "");
-        setIsEditMode(true);
-        setShowIssuePopup(true);
-    };
-
-
-    const filteredProducts = products.filter(product => {
-        const name = product.name || "";
-        const provider = product.provider || "";
-
-        const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(name);
-        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            provider.toLowerCase().includes(searchQuery.toLowerCase());
-
-        // Check if product falls within the date range
-        let withinDateRange = true;
-        if (startDate) {
-            withinDateRange = withinDateRange && new Date(product.date) >= new Date(startDate);
-        }
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            withinDateRange = withinDateRange && new Date(product.date) <= end;
-        }
-
-
-        return matchesProvider && matchesSearch && withinDateRange;
-    });
-
-
-
-
-    const handleDelete = async (productId) => {
-        if (confirm("Are you sure you want to delete this product?")) {
-            try {
-                await axios.delete(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${productId}`);
-                fetchUnsoldProducts();
-            } catch (error) {
-                console.error("Error deleting product:", error);
-            }
-        }
-    };
-
-    const handleIssueSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!issueProduct || !issuedTo || !issueQuantity || !issueKg) {
-            alert("All fields are required.");
-            return;
-        }
-
-        const payload = {
-            name: issuedTo,
-            quantity: Number(issueQuantity),
-            unit: issueKg,
-            remarks: remarks.trim(),
-        };
-
-        try {
-            if (isEditMode) {
-                // Edit mode → update product
-                const res = await axios.put(
-                    `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`,
-                    payload
-                );
-                if (res.status === 200) {
-                    alert("Product updated successfully.");
-                    fetchUnsoldProducts();
-                    setShowIssuePopup(false);
-                }
-            } else {
-                // Issue mode → create issued-product entry
-                const issuePayload = {
-                    productId: issueProduct._id || "",
-                    name: issueProduct.name || "",
-                    quantity: Number(issueQuantity),
-                    unit: issueProduct.unit || "",
-                    issuedTo: issuedTo.trim(),
-                    remarks: remarks.trim(),
-                    issueDate: issueDate
-                };
-
-                const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`, issuePayload);
-                if (res.status === 201) {
-                    alert("Product issued successfully.");
-                    fetchUnsoldProducts();
-                    setShowIssuePopup(false);
-                }
-            }
-        } catch (error) {
-            console.error("Error:", error);
-            alert("Error: " + (error.response?.data?.message || "Action failed"));
-        }
-    };
-
-
-const exportToPDF = (data) => {
-    const doc = new jsPDF();
-    doc.text("Products", 14, 16);
-
-    const tableColumn = [
-        "SI No.",
-        "Name",
-        "Quantity",
-        "Unit",
-        "Provider",
-        "Remarks",
-        "Status",
-        "Date Added"
+    const links = [
+        { path: "/add-product", label: "Add Product" },
+        { path: "/orders", label: "All Products" },
+        { path: "/issued-products", label: "Issued Products" },
+        { path: "/", label: "Logout" }
     ];
-
-    const tableRows = [];
-
-    data.forEach((product, index) => {
-        tableRows.push([
-            index + 1,
-            product.name,
-            product.quantity,
-            product.unit,
-            product.provider,
-            product.remarks || '-',
-            product.status,
-            new Date(product.date).toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            }),
-        ]);
-    });
-
-    autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 20,
-    });
-
-    doc.save("products.pdf");
-};
-
-    const openReceiptPopup = async (product) => {
-        try {
-            const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`);
-            const all = res.data || [];
-            const receipts = all.filter(r => r.productId === product._id || r.productId === product.productId || String(r.productId) === String(product._id));
-            setReceiptList(receipts);
-            setShowReceiptPopup(true);
-        } catch (err) {
-            console.error('Error fetching receipts', err);
-            setReceiptList([]);
-            setShowReceiptPopup(true);
-        }
-    };
-
-
-  const exportToExcel = (data) => {
-    const wsData = [
-        ["SI No.", "Name", "Quantity", "Unit", "Provider", "Remarks", "Status", "Date Added"],
-        ...data.map((product, index) => [
-            index + 1,
-            product.name,
-            product.quantity,
-            product.unit,
-            product.provider,
-            product.remarks || "-",
-            product.status,
-            new Date(product.date).toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            })
-        ])
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Apply black fill to header row
-    const headerStyle = {
-        fill: { fgColor: { rgb: "000000" } }, // black background
-        font: { color: { rgb: "FFFFFF" }, bold: true } // white bold text
-    };
-
-    const headerCols = ["A1","B1","C1","D1","E1","F1","G1","H1"];
-    headerCols.forEach(cell => {
-        if (!ws[cell]) return;
-        ws[cell].s = headerStyle;
-    });
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-
-    XLSX.writeFile(wb, "products.xlsx", { cellStyles: true });
-};
-
-
-
 
     return (
-        <div className="p-4 sm:p-8 bg-gray-100 min-h-screen">
-            <h2 className="text-3xl font-bold mb-6 text-center text-black">Product Inventory</h2>
-
-            {/* Provider Filter Dropdown */}
-            <div className="relative inline-block text-left mb-4">
-                <button
-                    onClick={() => setShowProviderDropdown(!showProviderDropdown)}
-                    className="px-4 py-2 bg-white text-black border-2 border-black rounded shadow hover:bg-black hover:text-white"
-                >
-                    {selectedProviders.length === allProviders.length ? 'All Providers' :
-                        selectedProviders.length === 0 ? 'Select Provider(s)' :
-                            `${selectedProviders.length} Selected`}
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => { /* placeholder: open finder UI later */ }}
-                    title="Find products by real (issued) date"
-                    className="ml-4 inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-2 border-black rounded shadow hover:bg-black hover:text-white"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H6zm-3 9v3a2 2 0 002 2h10a2 2 0 002-2v-3H3zm6-6a1 1 0 112 0v1h-2V5z" clipRule="evenodd" />
-                    </svg>
-                    Real Date Finder
-                </button>
-
-                {showProviderDropdown && (
-                    <div className="absolute z-10 mt-2 w-56 bg-white border border-black rounded shadow-lg max-h-60 overflow-y-auto">
-                        <label className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                onChange={() => handleProviderChange('ALL')}
-                                checked={selectedProviders.length === allProviders.length}
-                            />
-                            Select All
-                        </label>
-
-                        {allProviders.map((provider, index) => (
-                            <label
-                                key={index}
-                                className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100"
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="mr-2"
-                                    onChange={() => handleProviderChange(provider)}
-                                    checked={selectedProviders.includes(provider)}
-                                />
-                                {provider}
-                            </label>
-                        ))}
-                    </div>
-                )}
+        <>
+            {/* Desktop Sidebar */}
+            <div className="hidden md:flex flex-col bg-white text-black w-[240px] h-screen fixed top-0 left-0 p-6 z-40">
+                <h2 className="text-2xl font-bold mb-6">Inventory Control</h2>
+                <nav className="flex flex-col space-y-4">
+                    {links.map((link) => (
+                        <Link
+                            key={link.path}
+                            to={link.path}
+                            className={` pl-2 py-2 rounded-md hover:text-black hover:bg-white border-2 hover:border-black  ${location.pathname === link.path ? "rounded-md text-white bg-black pl-2 py-2" : ""
+                                }`}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
+                </nav>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium">Start Date:</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border px-2 py-1 rounded-md"
-                    />
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium">End Date:</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border px-2 py-1 rounded-md"
-                    />
-                </div>
-
-                <button
-                    onClick={() => {
-                        setStartDate("");
-                        setEndDate("");
-                    }}
-                    className="bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded-md text-sm"
-                >
-                    Clear Filter
+            {/* Mobile Header */}
+            <div className="md:hidden bg-gray-900 text-white flex justify-between items-center px-4 py-3 shadow-md fixed w-full top-0 left-0 z-50">
+                <h2 className="text-xl font-bold">Inventory Control</h2>
+                <button onClick={() => setOpen(true)}>
+                    <Menu size={24} />
                 </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                {/* Search Bar */}
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name or provider"
-                    className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                />
-
-                {/* Export Buttons */}
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => exportToExcel(filteredProducts)}
-                        className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm"
-                    >
-                        Export CSV
-                    </button>
-                    <button
-                        onClick={() => exportToPDF(filteredProducts)}
-                        className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm"
-                    >
-                        Export PDF
-                    </button>
-                    <div className="flex gap-2">
-                        <label className="bg-white border-2 hover:border-white hover:bg-black hover:text-white border-black text-black px-4 py-2 rounded-lg text-sm cursor-pointer">
-                            Import Excel
-                            <input
-                                type="file"
-                                accept=".xlsx,.xls,.xlsm" // ← Added .xlsm
-                                onChange={handleExcelImport}
-                                className="hidden"
-                            />
-                        </label>
-                    </div>
-
-
-                </div>
-            </div>
-
-
-            <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
-                <table className="w-full table-auto text-sm border-collapse">
-                    <thead className="bg-black text-white sticky top-0 z-20">
-                        <tr>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-1/3">Product Name</th>
-                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
-                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-28">Vendor</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Status</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Date Added</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-
-                        {filteredProducts.length === 0 ? (
-                            <tr>
-                                <td colSpan="9" className="text-center py-3 text-gray-500">
-                                    No unsold products found.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredProducts.map((product, index) => (
-                                <tr key={index} className="border-b border-black bg-white hover:bg-gray-200">
-                                    <td className="px-2 py-1 border-l border-black first:border-l-0">{index + 1}</td>
-                                    <td
-                                        className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3"
-                                        onClick={() => setSelectedProduct(product)}
-                                        title={product.name}
-                                        style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}
-                                    >
-                                        {product.name}
-                                    </td>
-                                    <td className="px-2 py-1 border-l border-black w-15 text-center">{product.quantity}</td>
-                                    <td className="px-2 py-1 border-l border-black w-20">{product.unit}</td>
-                                    <td className="px-2 py-1 border-l border-black w-28 text-center">{product.provider}</td>
-                                    <td className="px-2 py-1 border-l border-black">{product.remarks || '-'}</td>
-                                    <td className="px-2 py-1 border-l border-black">
-                                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${product.status.toLowerCase() === 'not sold'
-                                            ? 'bg-yellow-100 text-yellow-800'
-                                            : 'bg-green-100 text-green-700'
-                                            }`}>
-                                            {product.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-1 px-2 whitespace-nowrap border-l border-black">
-                                        {new Date(product.date).toLocaleDateString('en-IN', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        })}
-                                    </td>
-
-                                    <td className="px-2 py-1 whitespace-nowrap border-l border-black">
-                                        <div className="inline-flex gap-2 items-center">
-                                            <button
-                                                onClick={() => openIssuePopup(product)}
-                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
-                                            >
-                                                Issue
-                                            </button>
-                                            <button
-                                                onClick={() => openEditPopup(product)}
-                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                            onClick={() => openReceiptPopup(product)}
-                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
-                                            >
-                                                All Issued
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(product._id)}
-                                                className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Issue/Edit Modal */}
-            {showIssuePopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg w-full max-w-sm shadow-lg relative">
-                        <h3 className="text-lg font-semibold mb-2">
-                            {isEditMode ? "Edit Product" : "Issue Product"}
-                        </h3>
-                        <form onSubmit={handleIssueSubmit} className="space-y-2 text-sm">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Issued To</label>
-                                <input
-                                    type="text"
-                                    value={issuedTo}
-                                    onChange={(e) => setIssuedTo(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    placeholder="Enter name"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Stock Quantity</label>
-                                <input
-                                    type="text"
-                                    value={issueProduct ? issueProduct.quantity : ''}
-                                    readOnly
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md bg-gray-100 cursor-not-allowed text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                                <input
-                                    type="number"
-                                    value={issueQuantity}
-                                    onChange={(e) => setIssueQuantity(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    placeholder="Enter quantity"
-                                    min="1"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Unit</label>
-                                <select
-                                    value={issueKg}
-                                    onChange={(e) => setIssueKg(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    required
+            {/* Mobile Sidebar Drawer */}
+            {open && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
+                    <div className="w-64 bg-gray-900 text-white h-full p-6 fixed top-0 left-0 shadow-lg z-50">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold">Menu</h2>
+                            <button onClick={() => setOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <nav className="flex flex-col space-y-4">
+                            {links.map((link) => (
+                                <Link
+                                    key={link.path}
+                                    to={link.path}
+                                    className={`hover:text-blue-400 ${location.pathname === link.path ? "text-blue-400" : ""
+                                        }`}
+                                    onClick={() => setOpen(false)}
                                 >
-                                    <option value="">Select Unit</option>
-                                    <option value="Kg">Kg</option>
-                                    <option value="Litre">Litre</option>
-                                    <option value="Piece">Piece</option>
-                                    <option value="Box">Box</option>
-                                    <option value="Ton">Ton</option>
-                                    <option value="Nos">Nos</option>
-                                    <option value="Mtr">Mtr</option>
-                                    <option value="Set">Set</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Issue Date</label>
-                                <input
-                                    type="date"
-                                    value={issueDate}
-                                    onChange={(e) => setIssueDate(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    required
-                                />
-                            </div>
-
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Remarks</label>
-                                <textarea
-                                    value={remarks}
-                                    onChange={(e) => setRemarks(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    placeholder="Enter remarks (optional)"
-                                    rows={2}
-                                />
-                            </div>
-
-
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowIssuePopup(false)}
-                                    className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
-                                >
-                                    {isEditMode ? "Update" : "Issue"}
-                                </button>
-                            </div>
-                        </form>
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </nav>
                     </div>
                 </div>
             )}
-
-            {/* All Receipts Modal */}
-            {showReceiptPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg w-full max-w-md shadow-lg relative">
-                        <h3 className="text-lg font-semibold mb-2">All Receipts</h3>
-                        <div className="max-h-72 overflow-y-auto text-sm">
-                            {receiptList.length === 0 ? (
-                                <p className="text-gray-500">No receipts found for this product.</p>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-600 border-b">
-                                        <tr>
-                                            <th className="py-1 border-l border-black first:border-l-0">Qty</th>
-                                            <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
-                                            <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {receiptList.map((r, i) => (
-                                            <tr key={i} className="border-b">
-                                                <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
-                                                <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
-                                                <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                        <div className="flex justify-end mt-3">
-                            <button onClick={() => setShowReceiptPopup(false)} className="px-3 py-1 bg-gray-300 rounded text-sm">Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
+        </>
     );
 };
 
-export default ProductTable;
+export default Sidebar;
