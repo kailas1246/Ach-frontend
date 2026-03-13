@@ -16,7 +16,7 @@ const Sidebar = () => {
     return (
         <>
             {/* Desktop Sidebar */}
-            <div className="hidden md:flex flex-col bg-white text-black w-[290px] h-screen fixed top-0 left-0 p-6 z-40">
+            <div className="hidden md:flex flex-col bg-white text-black w-[240px] h-screen fixed top-0 left-0 p-6 z-40">
                 <h2 className="text-2xl font-bold mb-6">Inventory Control</h2>
                 <nav className="flex flex-col space-y-4">
                     {links.map((link) => (
