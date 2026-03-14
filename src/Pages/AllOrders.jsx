@@ -642,16 +642,18 @@ const exportToPDF = (data) => {
                             ) : (
                                 <table className="w-full text-sm">
                                     <thead className="text-left text-xs text-gray-600 border-b">
-                                        <tr>
-                                            <th className="py-1 border-l border-black first:border-l-0">Qty</th>
-                                            <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
-                                            <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
-                                        </tr>
+                                        <tr className="border-b border-black">
+                                                    <th className="py-1 border-l border-black first:border-l-0">Qty</th>
+                                                    <th className="py-1 border-l border-black first:border-l-0">Issued To</th>
+                                                    <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
+                                                    <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
+                                                </tr>
                                     </thead>
                                     <tbody>
-                                        {receiptList.map((r, i) => (
-                                            <tr key={i} className="border-b">
+                                            {receiptList.map((r, i) => (
+                                            <tr key={i} className="border-b border-black">
                                                 <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
+                                                <td className="py-1 border-l border-black">{r.issuedTo || '-'}</td>
                                                 <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
                                                 <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
                                             </tr>
