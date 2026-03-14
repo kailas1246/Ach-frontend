@@ -9,6 +9,7 @@ const IssuedProductTable = () => {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [siSearch, setSiSearch] = useState("");
 
     useEffect(() => {
         fetchIssuedProducts();
@@ -75,10 +76,35 @@ const IssuedProductTable = () => {
         XLSX.writeFile(workbook, "issued-products.xlsx");
     };
 
-    const filteredProducts = issuedProducts.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.issuedTo.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Apply text search (name / issuedTo). If SI search is provided,
+    // filter the already filtered list by displayed SI number (index+1).
+    const q = searchQuery.trim().toLowerCase();
+    const baseFiltered = issuedProducts.filter((item) => {
+        if (!q) return true;
+        const nameMatch = item.name?.toLowerCase().includes(q);
+        const issuedToMatch = item.issuedTo?.toLowerCase().includes(q);
+        return nameMatch || issuedToMatch;
+    });
+
+    const siQ = siSearch.trim();
+    let filteredProducts;
+    if (!siQ) {
+        filteredProducts = baseFiltered;
+    } else {
+        const siNum = Number(siQ);
+        if (!Number.isNaN(siNum) && Number.isInteger(siNum)) {
+            // Match against original serial number (position in issuedProducts)
+            filteredProducts = baseFiltered.filter((item) => {
+                const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
+                return origIdx !== -1 && origIdx + 1 === siNum;
+            });
+        } else {
+            filteredProducts = baseFiltered.filter((item) => {
+                const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
+                return origIdx !== -1 && String(origIdx + 1) === siQ;
+            });
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -89,7 +115,7 @@ const IssuedProductTable = () => {
                 </div>
 
                 {/* Filters and Export Controls */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700">Start Date</label>
                         <input
@@ -118,6 +144,17 @@ const IssuedProductTable = () => {
                             className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
                         />
                     </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700">SI No.</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Search SI No."
+                            value={siSearch}
+                            onChange={(e) => setSiSearch(e.target.value)}
+                            className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-6">
@@ -140,6 +177,7 @@ const IssuedProductTable = () => {
                             setStartDate("");
                             setEndDate("");
                             setSearchQuery("");
+                            setSiSearch("");
                         }}
                         className="text-sm px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
                     >
@@ -172,7 +210,10 @@ const IssuedProductTable = () => {
                             ) : (
                                 filteredProducts.map((item, idx) => (
                                     <tr key={item._id || idx} className="border-b border-black bg-white hover:bg-gray-200">
-                                        <td className="px-2 py-1 border-l border-black first:border-l-0">{idx + 1}</td>
+                                        <td className="px-2 py-1 border-l border-black first:border-l-0">{(() => {
+                                            const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
+                                            return origIdx !== -1 ? origIdx + 1 : idx + 1;
+                                        })()}</td>
                                         <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3" title={item.name} style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
                                             {item.name}
                                         </td>
