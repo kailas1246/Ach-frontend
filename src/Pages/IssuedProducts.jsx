@@ -147,54 +147,57 @@ const IssuedProductTable = () => {
                     </button>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto rounded-lg shadow">
-                    <table className="min-w-full bg-white">
-                        <thead className="bg-black text-white">
+                {/* Table (styled like AllOrders) */}
+                <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
+                    <table className="w-full table-auto text-sm border-collapse">
+                        <thead className="bg-black text-white sticky top-0 z-20">
                             <tr>
-                                <th className="text-left py-3 px-4">Name</th>
-                                <th className="text-left py-3 px-4">Issued To</th>
-                                <th className="text-left py-3 px-4">Quantity</th>
-                                <th className="text-left py-3 px-4">Unit</th>
-                                <th className="py-3 px-4 text-left">Issued Date</th>
-                                <th className="text-left py-3 px-4">Remarks</th>
-                                <th className="text-left py-3 px-4">Action</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-1/3">Product Name</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Issued To</th>
+                                <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Issued Date</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredProducts.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-6 text-gray-500">
+                                    <td colSpan="8" className="text-center py-3 text-gray-500">
                                         No records found.
                                     </td>
                                 </tr>
                             ) : (
-                                filteredProducts.map((item) => (
-                                    <tr key={item._id} className="hover:bg-gray-50 border-b">
-                                        <td className="py-3 px-4">{item.name}</td>
-                                        <td className="py-3 px-4">{item.issuedTo}</td>
-                                        <td className="py-3 px-4">{item.quantity}</td>
-                                        <td className="py-3 px-4">{item.unit}</td>
-                                        <td className="py-3 px-4">
-                                            {new Date(item.issueDate).toLocaleDateString('en-IN', {
+                                filteredProducts.map((item, idx) => (
+                                    <tr key={item._id || idx} className="border-b border-black bg-white hover:bg-gray-200">
+                                        <td className="px-2 py-1 border-l border-black first:border-l-0">{idx + 1}</td>
+                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3" title={item.name} style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
+                                            {item.name}
+                                        </td>
+                                        <td className="px-2 py-1 border-l border-black">{item.issuedTo}</td>
+                                        <td className="px-2 py-1 border-l border-black w-15 text-center">{item.quantity}</td>
+                                        <td className="px-2 py-1 border-l border-black w-20">{item.unit}</td>
+                                        <td className="px-2 py-1 border-l border-black">{item.remarks || '-'}</td>
+                                        <td className="py-1 px-2 whitespace-nowrap border-l border-black">
+                                            {item.issueDate ? new Date(item.issueDate).toLocaleDateString('en-IN', {
                                                 day: '2-digit',
                                                 month: 'short',
                                                 year: 'numeric'
-                                            })}
+                                            }) : '-'}
                                         </td>
-                                        <td className="py-3 px-4">{item.remarks || "-"}</td>
-                                        <td className="py-3 px-4">
-                                            <button
-                                                onClick={() => handleDelete(item._id)}
-                                                className="bg-white border-2 border-black hover:bg-black hover:text-white text-black px-3 py-1 rounded-md text-sm"
-                                            >
-                                                Delete
-                                            </button>
+                                        <td className="px-2 py-1 whitespace-nowrap border-l border-black">
+                                            <div className="inline-flex gap-2 items-center">
+                                                <button
+                                                    onClick={() => handleDelete(item._id)}
+                                                    className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
-
-
                                     </tr>
-
                                 ))
                             )}
                         </tbody>
