@@ -187,7 +187,7 @@ const IssuedProductTable = () => {
 
                 {/* Table (styled like AllOrders) */}
                 <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
-                    <table className="w-full table-auto text-sm border-collapse">
+                    <table className="w-full table-auto text-sm border-collapse border-l-2 border-r-2 border-black">
                         <thead className="bg-black text-white sticky top-0 z-20">
                             <tr>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
