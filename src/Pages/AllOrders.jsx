@@ -12,6 +12,7 @@ const ProductTable = () => {
     const [issuedTo, setIssuedTo] = useState("");
     const [issueQuantity, setIssueQuantity] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [siSearch, setSiSearch] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [issueKg, setIssueKg] = useState("KG")
@@ -112,7 +113,7 @@ const ProductTable = () => {
     };
 
 
-    const filteredProducts = products.filter(product => {
+    const baseFiltered = products.filter(product => {
         const name = product.name || "";
         const provider = product.provider || "";
 
@@ -131,9 +132,28 @@ const ProductTable = () => {
             withinDateRange = withinDateRange && new Date(product.date) <= end;
         }
 
-
         return matchesProvider && matchesSearch && withinDateRange;
     });
+
+    // SI number search: match against original serial number in the `products` list (index + 1)
+    const siQ = siSearch.trim();
+    let filteredProducts;
+    if (!siQ) {
+        filteredProducts = baseFiltered;
+    } else {
+        const siNum = Number(siQ);
+        if (!Number.isNaN(siNum) && Number.isInteger(siNum)) {
+            filteredProducts = baseFiltered.filter((item) => {
+                const origIdx = products.findIndex((p) => (p._id ? p._id === item._id : p === item));
+                return origIdx !== -1 && origIdx + 1 === siNum;
+            });
+        } else {
+            filteredProducts = baseFiltered.filter((item) => {
+                const origIdx = products.findIndex((p) => (p._id ? p._id === item._id : p === item));
+                return origIdx !== -1 && String(origIdx + 1) === siQ;
+            });
+        }
+    }
 
 
 
@@ -392,14 +412,24 @@ const exportToPDF = (data) => {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                {/* Search Bar */}
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name or provider"
-                    className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                />
+                {/* Search Bar and SI finder */}
+                <div className="flex items-center gap-2 w-full sm:w-64">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by name or provider"
+                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        value={siSearch}
+                        onChange={(e) => setSiSearch(e.target.value)}
+                        placeholder="SI No."
+                        className="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                    />
+                </div>
 
                 {/* Export Buttons */}
                 <div className="flex gap-2">
@@ -433,7 +463,7 @@ const exportToPDF = (data) => {
 
 
             <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
-                <table className="w-full table-auto text-sm border-collapse">
+                <table className="w-full table-auto text-sm border-collapse border-l-2 border-r-2 border-black">
                     <thead className="bg-black text-white sticky top-0 z-20">
                         <tr>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
@@ -459,7 +489,10 @@ const exportToPDF = (data) => {
                         ) : (
                             filteredProducts.map((product, index) => (
                                 <tr key={index} className="border-b border-black bg-white hover:bg-gray-200">
-                                    <td className="px-2 py-1 border-l border-black first:border-l-0">{index + 1}</td>
+                                    <td className="px-2 py-1 border-l border-black first:border-l-0">{(() => {
+                                        const origIdx = products.findIndex((p) => (p._id ? p._id === product._id : p === product));
+                                        return origIdx !== -1 ? origIdx + 1 : index + 1;
+                                    })()}</td>
                                     <td
                                         className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3"
                                         onClick={() => setSelectedProduct(product)}
