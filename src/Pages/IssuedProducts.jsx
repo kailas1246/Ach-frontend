@@ -10,6 +10,8 @@ const IssuedProductTable = () => {
     const [endDate, setEndDate] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [siSearch, setSiSearch] = useState("");
+    const [showReceiptPopup, setShowReceiptPopup] = useState(false);
+    const [receiptList, setReceiptList] = useState([]);
 
     useEffect(() => {
         fetchIssuedProducts();
@@ -39,6 +41,27 @@ const IssuedProductTable = () => {
         } catch (error) {
             console.error("Error deleting issued product:", error);
             alert("Failed to delete issued product.");
+        }
+    };
+
+    const openReceiptPopup = async (item) => {
+        try {
+            const res = await axios.get(
+                `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`
+            );
+            const all = res.data || [];
+            const receipts = all.filter(r =>
+                r.productId === item.productId ||
+                String(r.productId) === String(item.productId) ||
+                r.productId === item._id ||
+                String(r.productId) === String(item._id)
+            );
+            setReceiptList(receipts);
+            setShowReceiptPopup(true);
+        } catch (err) {
+            console.error('Error fetching receipts', err);
+            setReceiptList([]);
+            setShowReceiptPopup(true);
         }
     };
 
@@ -189,10 +212,10 @@ const IssuedProductTable = () => {
                 <div className="overflow-x-auto bg-white rounded-xl shadow-lg max-h-[65vh] overflow-auto">
                     <table className="w-full table-auto text-sm border-collapse border-l-2 border-r-2 border-black">
                         <thead className="bg-black text-white sticky top-0 z-20">
-                            <tr>
+                                <tr>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-1/3">Product Name</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Issued To</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-48">Product Name</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-32">Issued To</th>
                                 <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
@@ -214,10 +237,10 @@ const IssuedProductTable = () => {
                                             const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
                                             return origIdx !== -1 ? origIdx + 1 : idx + 1;
                                         })()}</td>
-                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/3" title={item.name} style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
+                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-40" title={item.name} style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
                                             {item.name}
                                         </td>
-                                        <td className="px-2 py-1 border-l border-black">{item.issuedTo}</td>
+                                        <td className="px-2 py-1 border-l border-black w-20">{item.issuedTo}</td>
                                         <td className="px-2 py-1 border-l border-black w-15 text-center">{item.quantity}</td>
                                         <td className="px-2 py-1 border-l border-black w-20">{item.unit}</td>
                                         <td className="px-2 py-1 border-l border-black">{item.remarks || '-'}</td>
@@ -236,6 +259,12 @@ const IssuedProductTable = () => {
                                                 >
                                                     Delete
                                                 </button>
+                                                <button
+                                                    onClick={() => openReceiptPopup(item)}
+                                                    className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
+                                                >
+                                                    All Issued
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -244,6 +273,43 @@ const IssuedProductTable = () => {
                         </tbody>
                     </table>
                 </div>
+                {/* All Receipts Modal */}
+                {showReceiptPopup && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-4 rounded-lg w-full max-w-md shadow-lg relative">
+                            <h3 className="text-lg font-semibold mb-2">All Issues</h3>
+                            <div className="max-h-72 overflow-y-auto text-sm">
+                                {receiptList.length === 0 ? (
+                                    <p className="text-gray-500">No receipts found for this product.</p>
+                                ) : (
+                                    <table className="w-full text-sm">
+                                        <thead className="text-left text-xs text-gray-600 border-b">
+                                            <tr className="border-b border-black">
+                                                <th className="py-1 border-l border-black first:border-l-0">Qty</th>
+                                                <th className="py-1 border-l border-black first:border-l-0">Issued To</th>
+                                                <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
+                                                <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {receiptList.map((r, i) => (
+                                                <tr key={i} className="border-b border-black">
+                                                    <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
+                                                    <td className="py-1 border-l border-black">{r.issuedTo || '-'}</td>
+                                                    <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
+                                                    <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                            <div className="flex justify-end mt-3">
+                                <button onClick={() => setShowReceiptPopup(false)} className="px-3 py-1 bg-gray-300 rounded text-sm">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
