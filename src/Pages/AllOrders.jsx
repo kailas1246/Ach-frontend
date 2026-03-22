@@ -23,8 +23,10 @@ const ProductTable = () => {
     const [showProviderDropdown, setShowProviderDropdown] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [remarks, setRemarks] = useState("");
-    const [showReceiptPopup, setShowReceiptPopup] = useState(false);
-    const [receiptList, setReceiptList] = useState([]);
+    const [showAllReceiptPopup, setShowAllReceiptPopup] = useState(false);
+    const [allReceiptProduct, setAllReceiptProduct] = useState(null);
+    const [allReceiptHistory, setAllReceiptHistory] = useState([]);
+    
 
     const fetchUnsoldProducts = async () => {
         try {
@@ -32,6 +34,7 @@ const ProductTable = () => {
                 `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products`
             );
             setProducts(response.data);
+            console.debug('AllOrders: fetched products count', response.data?.length);
 
             const uniqueProviders = [...new Set(response.data.map(p => p.name))];
             setAllProviders(uniqueProviders);
@@ -91,6 +94,26 @@ const ProductTable = () => {
         fetchUnsoldProducts();
     }, []);
 
+    // Listen for external product updates (e.g. from AddProduct) and refresh
+    useEffect(() => {
+        const handler = (e) => {
+            const updated = e?.detail?.product;
+            if (updated) {
+                setProducts(prev => {
+                    // replace matching product by _id, or append if not present
+                    const found = prev.some(p => p._id === updated._id);
+                    if (found) return prev.map(p => p._id === updated._id ? updated : p);
+                    return [updated, ...prev];
+                });
+            } else {
+                fetchUnsoldProducts();
+            }
+        };
+        window.addEventListener('productsUpdated', handler);
+        console.debug('AllOrders: registered productsUpdated listener');
+        return () => window.removeEventListener('productsUpdated', handler);
+    }, []);
+
 
     const openIssuePopup = (product) => {
         setIssueProduct(product);
@@ -104,12 +127,32 @@ const ProductTable = () => {
 
     const openEditPopup = (product) => {
         setIssueProduct(product);
-        setIssuedTo(product.name);
-        setIssueQuantity(product.quantity);
+        // default 'issuedTo' to provider when restocking (makes more sense for receipts)
+        setIssuedTo(product.provider || product.name);
+        // When editing, allow entering the amount to ADD to existing stock
+        setIssueQuantity("");
         setIssueKg(product.unit);
         setRemarks(product.remarks || "");
         setIsEditMode(true);
         setShowIssuePopup(true);
+    };
+
+    const openAllReceipt = async (product) => {
+        const updated = products.find(p => (p._id && product._id) ? p._id === product._id : p === product) || product;
+        setAllReceiptProduct(updated);
+        setShowAllReceiptPopup(true);
+
+        try {
+            if (updated && updated._id) {
+                const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${updated._id}/history`);
+                setAllReceiptHistory(Array.isArray(res.data) ? res.data : []);
+            } else {
+                setAllReceiptHistory([]);
+            }
+        } catch (err) {
+            console.error('Failed to fetch product history', err);
+            setAllReceiptHistory([]);
+        }
     };
 
 
@@ -186,10 +229,14 @@ const ProductTable = () => {
 
         try {
             if (isEditMode) {
-                // Edit mode → update product
+                // Edit mode → add entered quantity to existing product quantity
+                const addedQty = Number(issueQuantity) || 0;
+                const currentQty = Number(issueProduct.quantity) || 0;
+                const updatedPayload = { ...payload, quantity: currentQty + addedQty };
+
                 const res = await axios.put(
                     `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`,
-                    payload
+                    updatedPayload
                 );
                 if (res.status === 200) {
                     alert("Product updated successfully.");
@@ -265,19 +312,7 @@ const exportToPDF = (data) => {
     doc.save("products.pdf");
 };
 
-    const openReceiptPopup = async (product) => {
-        try {
-            const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/issued-products`);
-            const all = res.data || [];
-            const receipts = all.filter(r => r.productId === product._id || r.productId === product.productId || String(r.productId) === String(product._id));
-            setReceiptList(receipts);
-            setShowReceiptPopup(true);
-        } catch (err) {
-            console.error('Error fetching receipts', err);
-            setReceiptList([]);
-            setShowReceiptPopup(true);
-        }
-    };
+    
 
 
   const exportToExcel = (data) => {
@@ -337,17 +372,6 @@ const exportToPDF = (data) => {
                             `${selectedProviders.length} Selected`}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={() => { /* placeholder: open finder UI later */ }}
-                    title="Find products by real (issued) date"
-                    className="ml-4 inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-2 border-black rounded shadow hover:bg-black hover:text-white"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H6zm-3 9v3a2 2 0 002 2h10a2 2 0 002-2v-3H3zm6-6a1 1 0 112 0v1h-2V5z" clipRule="evenodd" />
-                    </svg>
-                    Real Date Finder
-                </button>
 
                 {showProviderDropdown && (
                     <div className="absolute z-10 mt-2 w-56 bg-white border border-black rounded shadow-lg max-h-60 overflow-y-auto">
@@ -536,11 +560,12 @@ const exportToPDF = (data) => {
                                                 Edit
                                             </button>
                                             <button
-                                                            onClick={() => openReceiptPopup(product)}
+                                                onClick={() => openAllReceipt(product)}
                                                 className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
                                             >
-                                                All Issued
+                                                All Receipt
                                             </button>
+                                            
                                             <button
                                                 onClick={() => handleDelete(product._id)}
                                                 className="bg-white border-2 hover:bg-black hover:text-white border-black text-black text-xs px-2 py-0.5 rounded"
@@ -664,43 +689,63 @@ const exportToPDF = (data) => {
                 </div>
             )}
 
-            {/* All Receipts Modal */}
-            {showReceiptPopup && (
+            {/* All Receipt Modal (read-only, shows latest updated product details) */}
+            {showAllReceiptPopup && allReceiptProduct && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg w-full max-w-md shadow-lg relative">
-                        <h3 className="text-lg font-semibold mb-2">All Receipts</h3>
-                        <div className="max-h-72 overflow-y-auto text-sm">
-                            {receiptList.length === 0 ? (
-                                <p className="text-gray-500">No receipts found for this product.</p>
+                    <div className="bg-white p-4 rounded-lg w-full max-w-2xl shadow-lg relative">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold mb-2">All Receipt - Updates ({allReceiptHistory.length})</h3>
+                            <div className="text-sm text-gray-600">Product: <span className="font-medium">{allReceiptProduct.name}</span></div>
+                        </div>
+
+                        <div className="mt-2">
+                            {allReceiptHistory.length === 0 ? (
+                                <div className="text-sm text-gray-500">No updates found for this product.</div>
                             ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-600 border-b">
-                                        <tr className="border-b border-black">
-                                                    <th className="py-1 border-l border-black first:border-l-0">Qty</th>
-                                                    <th className="py-1 border-l border-black first:border-l-0">Issued To</th>
-                                                    <th className="py-1 border-l border-black first:border-l-0">Issue Date</th>
-                                                    <th className="py-1 border-l border-black first:border-l-0">Real Date</th>
-                                                </tr>
-                                    </thead>
-                                    <tbody>
-                                            {receiptList.map((r, i) => (
-                                            <tr key={i} className="border-b border-black">
-                                                <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
-                                                <td className="py-1 border-l border-black">{r.issuedTo || '-'}</td>
-                                                <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
-                                                <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                                <div className="overflow-x-auto max-h-60 overflow-auto border rounded">
+                                    <table className="w-full text-sm table-auto">
+                                        <thead className="bg-gray-100 sticky top-0">
+                                            <tr>
+                                                <th className="px-2 py-1 text-left">#</th>
+                                                <th className="px-2 py-1 text-left">Action</th>
+                                                <th className="px-2 py-1 text-left">Qty Change</th>
+                                                <th className="px-2 py-1 text-left">Prev Qty</th>
+                                                <th className="px-2 py-1 text-left">New Qty</th>
+                                                <th className="px-2 py-1 text-left">Remarks</th>
+                                                <th className="px-2 py-1 text-left">Date</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {allReceiptHistory.map((h, i) => (
+                                                <tr key={h._id || i} className="border-t">
+                                                    <td className="px-2 py-1 align-top">{i + 1}</td>
+                                                    <td className="px-2 py-1 align-top">{h.action}</td>
+                                                    <td className="px-2 py-1 align-top">{h.quantityChange}</td>
+                                                    <td className="px-2 py-1 align-top">{h.previousQuantity}</td>
+                                                    <td className="px-2 py-1 align-top">{h.newQuantity}</td>
+                                                    <td className="px-2 py-1 align-top">{h.remarks || '-'}</td>
+                                                    <td className="px-2 py-1 align-top whitespace-nowrap">{new Date(h.createdAt).toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
-                        <div className="flex justify-end mt-3">
-                            <button onClick={() => setShowReceiptPopup(false)} className="px-3 py-1 bg-gray-300 rounded text-sm">Close</button>
+
+                        <div className="flex justify-end gap-2 pt-4">
+                            <button
+                                onClick={() => { setShowAllReceiptPopup(false); setAllReceiptProduct(null); setAllReceiptHistory([]); }}
+                                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            
 
         </div>
     );
