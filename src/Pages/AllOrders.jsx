@@ -36,7 +36,7 @@ const ProductTable = () => {
             setProducts(response.data);
             console.debug('AllOrders: fetched products count', response.data?.length);
 
-            const uniqueProviders = [...new Set(response.data.map(p => p.name))];
+            const uniqueProviders = [...new Set(response.data.map(p => p.provider))];
             setAllProviders(uniqueProviders);
         } catch (error) {
             console.error('Error fetching unsold products:', error);
@@ -129,8 +129,8 @@ const ProductTable = () => {
         setIssueProduct(product);
         // default 'issuedTo' to provider when restocking (makes more sense for receipts)
         setIssuedTo(product.provider || product.name);
-        // When editing, allow entering the amount to ADD to existing stock
-        setIssueQuantity("");
+        // When editing, prefill the quantity field so user can replace it
+        setIssueQuantity(String(product.quantity || ""));
         setIssueKg(product.unit);
         setRemarks(product.remarks || "");
         setIsEditMode(true);
@@ -160,7 +160,7 @@ const ProductTable = () => {
         const name = product.name || "";
         const provider = product.provider || "";
 
-        const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(name);
+        const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(provider);
         const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             provider.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -229,10 +229,19 @@ const ProductTable = () => {
 
         try {
             if (isEditMode) {
-                // Edit mode → add entered quantity to existing product quantity
-                const addedQty = Number(issueQuantity) || 0;
-                const currentQty = Number(issueProduct.quantity) || 0;
-                const updatedPayload = { ...payload, quantity: currentQty + addedQty };
+                // Edit mode → replace existing quantity with entered quantity
+                const newQty = Number(issueQuantity);
+                if (Number.isNaN(newQty)) {
+                    alert("Please enter a valid quantity.");
+                    return;
+                }
+
+                // Only update the fields that should change — do NOT overwrite the product name
+                const updatedPayload = {
+                    quantity: newQty,
+                    unit: issueKg || issueProduct.unit,
+                    remarks: remarks.trim(),
+                };
 
                 const res = await axios.put(
                     `${import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL}/api/products/${issueProduct._id}`,
