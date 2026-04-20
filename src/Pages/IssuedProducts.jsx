@@ -214,8 +214,8 @@ const IssuedProductTable = () => {
                         <thead className="bg-black text-white sticky top-0 z-20">
                                 <tr>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-48">Product Name</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-32">Issued To</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-74">Product Name</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Issued To</th>
                                 <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
@@ -237,7 +237,7 @@ const IssuedProductTable = () => {
                                             const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
                                             return origIdx !== -1 ? origIdx + 1 : idx + 1;
                                         })()}</td>
-                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-40" title={item.name} style={{maxWidth: '15ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
+                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-64" title={item.name} style={{maxWidth: '30ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
                                             {item.name}
                                         </td>
                                         <td className="px-2 py-1 border-l border-black w-20">{item.issuedTo}</td>
