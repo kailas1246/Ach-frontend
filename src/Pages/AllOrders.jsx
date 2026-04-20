@@ -504,7 +504,7 @@ const exportToPDF = (data) => {
                             <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
                             <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-28">Vendor</th>
-                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-28">Remarks</th>
+                            <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20" style={{minWidth: '90px'}}>Remarks</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Status</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Date Added</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Actions</th>
@@ -530,23 +530,24 @@ const exportToPDF = (data) => {
                                         className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-1/2"
                                         onClick={() => setSelectedProduct(product)}
                                         title={product.name}
-                                        style={{maxWidth: '30ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}
+                                        style={{
+                                            maxWidth: '30ch',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word'
+                                        }}
                                     >
                                         {product.name}
                                     </td>
                                     <td className="px-2 py-1 border-l border-black w-15 text-center">{product.quantity}</td>
                                     <td className="px-2 py-1 border-l border-black w-20">{product.unit}</td>
                                     <td className="px-2 py-1 border-l border-black w-28 text-center">{product.provider}</td>
-                                    <td className="px-2 py-1 border-l border-black w-28">
+                                    <td className="px-2 py-1 border-l border-black w-20" style={{minWidth: '90px'}}>
                                         <div
                                             title={product.remarks || '-'}
                                             style={{
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'normal'
+                                                maxWidth: '20ch',
+                                                whiteSpace: 'normal',
+                                                wordBreak: 'break-word'
                                             }}
                                         >
                                             {product.remarks || '-'}
