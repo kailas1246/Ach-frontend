@@ -214,11 +214,11 @@ const IssuedProductTable = () => {
                         <thead className="bg-black text-white sticky top-0 z-20">
                                 <tr>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-12">SI No.</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-74">Product Name</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-96" style={{maxWidth: '48ch'}}>Product Name</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Issued To</th>
                                 <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
-                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Remarks</th>
+                                <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-32 break-words whitespace-normal" style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>Remarks</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Issued Date</th>
                                 <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Actions</th>
                             </tr>
@@ -237,13 +237,15 @@ const IssuedProductTable = () => {
                                             const origIdx = issuedProducts.findIndex((p) => (p._id ? p._id === item._id : p === item));
                                             return origIdx !== -1 ? origIdx + 1 : idx + 1;
                                         })()}</td>
-                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0 w-64" title={item.name} style={{maxWidth: '30ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
+                                        <td className="px-2 py-1 text-black font-normal break-words border-l border-black first:border-l-0" title={item.name} style={{maxWidth: '48ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
                                             {item.name}
                                         </td>
-                                        <td className="px-2 py-1 border-l border-black w-20">{item.issuedTo}</td>
+                                        <td className="px-2 py-1 border-l border-black w-20 break-words whitespace-normal" title={item.issuedTo} style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>
+                                            {item.issuedTo || '-'}
+                                        </td>
                                         <td className="px-2 py-1 border-l border-black w-15 text-center">{item.quantity}</td>
                                         <td className="px-2 py-1 border-l border-black w-20">{item.unit}</td>
-                                        <td className="px-2 py-1 border-l border-black">{item.remarks || '-'}</td>
+                                        <td className="px-2 py-1 border-l border-black break-words whitespace-normal" title={item.remarks} style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>{item.remarks || '-'}</td>
                                         <td className="py-1 px-2 whitespace-nowrap border-l border-black">
                                             {item.issueDate ? new Date(item.issueDate).toLocaleDateString('en-IN', {
                                                 day: '2-digit',
@@ -295,7 +297,7 @@ const IssuedProductTable = () => {
                                             {receiptList.map((r, i) => (
                                                 <tr key={i} className="border-b border-black">
                                                     <td className="py-1 border-l border-black first:border-l-0">{r.quantity}</td>
-                                                    <td className="py-1 border-l border-black">{r.issuedTo || '-'}</td>
+                                                    <td className="py-1 border-l border-black break-words whitespace-normal" title={r.issuedTo} style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>{r.issuedTo || '-'}</td>
                                                     <td className="py-1 border-l border-black">{r.issueDate ? new Date(r.issueDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</td>
                                                     <td className="py-1 border-l border-black">{(r.issuedAt || r.createdAt || r.updatedAt) ? new Date(r.issuedAt || r.createdAt || r.updatedAt).toLocaleString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
                                                 </tr>
