@@ -503,7 +503,7 @@ const exportToPDF = (data) => {
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-1/2">Product Name</th>
                             <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-16">Quantity</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20">Unit</th>
-                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-28">Vendor</th>
+                            <th className="py-1 px-2 text-center border-l border-black first:border-l-0 w-20 break-words whitespace-normal" style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>Vendor</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0 w-20" style={{minWidth: '90px'}}>Remarks</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Status</th>
                             <th className="py-1 px-2 text-left border-l border-black first:border-l-0">Date Added</th>
@@ -540,7 +540,7 @@ const exportToPDF = (data) => {
                                     </td>
                                     <td className="px-2 py-1 border-l border-black w-15 text-center">{product.quantity}</td>
                                     <td className="px-2 py-1 border-l border-black w-20">{product.unit}</td>
-                                    <td className="px-2 py-1 border-l border-black w-28 text-center">{product.provider}</td>
+                                    <td className="px-2 py-1 border-l border-black w-28 break-words whitespace-normal text-center" title={product.provider} style={{maxWidth: '12ch', whiteSpace: 'normal', overflowWrap: 'break-word'}}>{product.provider || '-'}</td>
                                     <td className="px-2 py-1 border-l border-black w-20" style={{minWidth: '90px'}}>
                                         <div
                                             title={product.remarks || '-'}
