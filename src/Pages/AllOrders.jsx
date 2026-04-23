@@ -277,6 +277,13 @@ const ProductTable = () => {
         }
     };
 
+    // Return a display status: treat quantity 0 as Sold
+    const getDisplayStatus = (product) => {
+        if (!product) return 'Not Sold';
+        if (Number(product.quantity) === 0) return 'Sold';
+        return product.status || 'Not Sold';
+    };
+
 
 const exportToPDF = (data) => {
     const doc = new jsPDF();
@@ -303,7 +310,7 @@ const exportToPDF = (data) => {
             product.unit,
             product.provider,
             product.remarks || '-',
-            product.status,
+            getDisplayStatus(product),
             new Date(product.date).toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: 'short',
@@ -334,7 +341,7 @@ const exportToPDF = (data) => {
             product.unit,
             product.provider,
             product.remarks || "-",
-            product.status,
+            getDisplayStatus(product),
             new Date(product.date).toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: 'short',
@@ -554,12 +561,16 @@ const exportToPDF = (data) => {
                                         </div>
                                     </td>
                                     <td className="px-2 py-1 border-l border-black">
-                                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${product.status.toLowerCase() === 'not sold'
-                                            ? 'bg-yellow-100 text-yellow-800'
-                                            : 'bg-green-100 text-green-700'
-                                            }`}>
-                                            {product.status}
-                                        </span>
+                                        {(() => {
+                                            const statusText = getDisplayStatus(product);
+                                            const isNotSold = statusText.toLowerCase() === 'not sold';
+                                            const badgeClass = isNotSold ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-700';
+                                            return (
+                                                <span className={`px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${badgeClass}`}>
+                                                    {statusText}
+                                                </span>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="py-1 px-2 whitespace-nowrap border-l border-black">
                                         {new Date(product.date).toLocaleDateString('en-IN', {
